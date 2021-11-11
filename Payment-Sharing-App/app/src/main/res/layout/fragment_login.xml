@@ -4,6 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@android:color/darker_gray"
     tools:context=".fragments.LoginFragment">
 
     <RelativeLayout
@@ -26,7 +27,6 @@
     </RelativeLayout>
 
 
-
     <TextView
         android:id="@+id/tvUserName"
         android:layout_width="wrap_content"
@@ -38,6 +38,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/relativeLayout" />
+
     <EditText
         android:id="@+id/etUserName"
         android:layout_width="200dp"
@@ -46,6 +47,8 @@
         android:background="@drawable/edit_text_border"
         android:hint="@string/user_name"
         android:padding="4dp"
+        android:textAlignment="center"
+        android:textColor="@color/white"
         android:textSize="20sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -72,11 +75,12 @@
         android:hint="@string/password_et"
         android:padding="4dp"
         android:password="true"
+        android:textAlignment="center"
+        android:textColor="@color/white"
         android:textSize="20sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/tvPassword"
-        />
+        app:layout_constraintTop_toBottomOf="@+id/tvPassword" />
 
     <Button
         android:id="@+id/btnLogin"
@@ -93,7 +97,7 @@
         app:layout_constraintTop_toBottomOf="@+id/etPassword" />
 
     <Button
-        android:id="@+id/button2"
+        android:id="@+id/btnRegisterLogin"
         android:layout_width="150dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
