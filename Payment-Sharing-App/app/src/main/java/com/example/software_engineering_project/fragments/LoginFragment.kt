@@ -11,7 +11,6 @@ import android.widget.ImageView
 import androidx.navigation.fragment.findNavController
 import com.bumptech.glide.Glide
 import com.example.software_engineering_project.R
-import com.google.android.material.button.MaterialButtonToggleGroup
 
 
 class LoginFragment : Fragment() {
@@ -23,10 +22,6 @@ class LoginFragment : Fragment() {
     private lateinit var ivLoginPortrait : ImageView
     private lateinit var btnLogin : Button
     private lateinit var btnRegister : Button
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-
-    }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,

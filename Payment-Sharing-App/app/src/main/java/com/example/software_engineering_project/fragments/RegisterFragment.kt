@@ -1,16 +1,14 @@
 package com.example.software_engineering_project.fragments
 
+
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Bundle
-import android.provider.ContactsContract
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
-import android.widget.EditText
-import android.widget.ImageView
-import android.widget.RelativeLayout
+import android.widget.*
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.navigation.fragment.findNavController
@@ -18,6 +16,10 @@ import com.bumptech.glide.Glide
 import com.example.software_engineering_project.LoginActivity
 import com.example.software_engineering_project.R
 import com.example.software_engineering_project.activityResult.PickPhoto
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.ktx.firestore
+import com.google.firebase.ktx.Firebase
+import com.google.firebase.storage.FirebaseStorage
 
 
 class RegisterFragment : Fragment() {
@@ -34,10 +36,17 @@ class RegisterFragment : Fragment() {
     private lateinit var rlRegisterPortraitLayout: RelativeLayout
     private lateinit var btnRegister:Button
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
+    private var imageUri:Uri? = null
+    private lateinit var userName: String
+    private lateinit var emailAddress: String
+    private lateinit var password:String
 
-    }
+    private val mAuth: FirebaseAuth = FirebaseAuth.getInstance()
+    private val storage = FirebaseStorage.getInstance()
+    private val db = Firebase.firestore
+//    private val mLoadingBar:ProgressDialog = ProgressDialog(requireContext())
+
+
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -71,8 +80,111 @@ class RegisterFragment : Fragment() {
             launchIntentForPhoto()
         }
         btnRegister.setOnClickListener {
-            findNavController().navigate(R.id.action_registerFragment_to_registrationSuccessfulFragment)
+            validateData()
+
         }
+    }
+
+    private fun validateData() {
+        userName = etUserName.text.toString()
+        emailAddress = etEmail.text.toString()
+        password = etPassword.text.toString()
+        val confirmPassword = etPasswordConfirmation.text.toString()
+
+        if(userName.length <3){
+            showError("User name need to be at least 3 character!")
+        }
+        else if (!android.util.Patterns.EMAIL_ADDRESS.matcher(emailAddress).matches() ){
+            showError("Invalid email address!")
+        }
+        else if (password.length < 6 ){
+            showError("Password need to be at least 6 character long!")
+        }
+        else if (password != confirmPassword){
+            showError("The password and the password confirmation does not match!")
+        }
+        else{
+//            mLoadingBar.setTitle("Registration")
+//            mLoadingBar.setMessage("Please wait")
+//            mLoadingBar.setCanceledOnTouchOutside(false)
+//            mLoadingBar.show()
+
+            mAuth.createUserWithEmailAndPassword(emailAddress,password).addOnCompleteListener { result ->
+                if(result.isSuccessful){
+                    findNavController().navigate(R.id.action_registerFragment_to_registrationSuccessfulFragment)
+                    mAuth.currentUser?.let { it.sendEmailVerification().addOnCompleteListener { task ->
+                        if(task.isSuccessful){
+                            showError("Email sent to $emailAddress")
+                        }
+                    }
+                    }
+
+                }
+                else{
+                    Toast.makeText(requireContext(),"${result.result}",Toast.LENGTH_LONG).show()
+                }
+                if(imageUri != null) {
+                    uploadImage()
+                }
+                else{
+                    saveUserDataToFirestore()
+                }
+            }
+
+        }
+    }
+
+    private fun uploadImage() {
+        if(mAuth.currentUser != null){
+            val path = storage.reference.child("userPhotos").child(emailAddress)
+            path.putFile(imageUri!!).addOnSuccessListener {
+                Toast.makeText(requireContext(),"Photo uploaded",Toast.LENGTH_SHORT).show()
+                path.downloadUrl.addOnSuccessListener { uri ->
+                    saveUserDataToFirestore(uri)
+                }
+            }
+
+        }
+        else{
+            saveUserDataToFirestore()
+        }
+    }
+    private fun saveUserDataToFirestore(){
+        val doc = db.collection("User Data").document(emailAddress)
+        val data = hashMapOf(
+            "user_id" to mAuth.currentUser!!.uid,
+            "user_name" to userName
+        )
+        doc.set(data).addOnCompleteListener {
+            if(it.isSuccessful){
+                showError("Your data has been uploaded!")
+            }
+            else{
+                showError("Failed to upload your data!")
+            }
+        }
+    }
+
+    private fun saveUserDataToFirestore(uri: Uri?) {
+        val doc = db.collection("User Data").document(emailAddress)
+        val data = hashMapOf(
+            "user_id" to mAuth.currentUser!!.uid,
+            "photo" to uri.toString(),
+            "user_name" to userName
+        )
+        doc.set(data).addOnCompleteListener {
+            if(it.isSuccessful){
+                showError("Your data has been uploaded!")
+            }
+            else{
+                showError("Failed to upload your data!")
+            }
+        }
+    }
+
+
+    private fun showError(message: String) {
+        Toast.makeText(requireContext(),message,Toast.LENGTH_LONG).show()
     }
 
     private fun launchIntentForPhoto() {
@@ -89,7 +201,9 @@ class RegisterFragment : Fragment() {
                 .load(selectedUri)
                 .circleCrop()
                 .into(ivRegisterPortrait)
+            imageUri = selectedUri
         }
+
     }
 
     private fun isReadExternalPermissionGranted(): Boolean {

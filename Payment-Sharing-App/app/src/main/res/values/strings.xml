@@ -12,4 +12,6 @@
     <string name="email_address_ro">email@address.ro</string>
     <string name="confirm_password">Confirm Password:</string>
     <string name="confirm_password_et">Confirm Password</string>
+    <string name="your_registration_was_successful">Your registration was successful!</string>
+    <string name="please_login">Please login</string>
 </resources>
