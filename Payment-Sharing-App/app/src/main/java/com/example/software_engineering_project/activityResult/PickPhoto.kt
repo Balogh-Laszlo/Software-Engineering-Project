@@ -9,7 +9,7 @@ import androidx.appcompat.app.AppCompatActivity
 
 class PickPhoto: ActivityResultContract<Int, Uri?>() {
     companion object{
-        val TAG = "PICK PHOTO"
+        const val TAG = "PICK PHOTO"
     }
     override fun createIntent(context: Context, ringtoneType: Int) : Intent {
         val intent = Intent(Intent.ACTION_PICK)

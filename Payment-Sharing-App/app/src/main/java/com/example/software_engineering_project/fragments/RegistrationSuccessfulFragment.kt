@@ -1,12 +1,13 @@
 package com.example.software_engineering_project.fragments
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
-import androidx.navigation.fragment.findNavController
+import com.example.software_engineering_project.MainActivity
 import com.example.software_engineering_project.R
 
 
@@ -27,13 +28,14 @@ class RegistrationSuccessfulFragment : Fragment() {
 
     private fun setOnClickListeners() {
         btnLogin.setOnClickListener {
-            findNavController().navigate(R.id.action_registrationSuccessfulFragment_to_loginFragment)
+            val intent = Intent(requireContext(),MainActivity::class.java)
+            startActivity(intent)
         }
     }
 
     private fun initializeView(view: View?) {
             if(view != null){
-                btnLogin = view.findViewById(R.id.btnLoginSeccessful)
+                btnLogin = view.findViewById(R.id.btnLoginSuccessful)
             }
     }
 
