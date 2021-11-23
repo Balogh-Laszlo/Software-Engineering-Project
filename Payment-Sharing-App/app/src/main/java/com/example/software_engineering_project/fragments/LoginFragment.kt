@@ -55,12 +55,14 @@ class LoginFragment : Fragment() {
             findNavController().navigate(R.id.action_loginFragment_to_registerFragment)
         }
         btnLogin.setOnClickListener {
+            btnLogin.isEnabled = false
             mAuth.signInWithEmailAndPassword(etEmailAddress.text.toString(),etPassword.text.toString()).addOnCompleteListener {
                 if (it.isSuccessful){
                     val intent = Intent(requireContext(),MainActivity::class.java)
                     startActivity(intent)
                 }
                 else{
+                    btnLogin.isEnabled = true
                     Toast.makeText(requireContext(),"Incorrect email address or password!",Toast.LENGTH_LONG).show()
                 }
             }
