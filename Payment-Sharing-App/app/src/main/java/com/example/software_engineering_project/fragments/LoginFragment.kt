@@ -71,7 +71,7 @@ class LoginFragment : Fragment() {
 
     private fun initializeView(view: View?) {
         if(view != null){
-            ivLoginPortrait = view.findViewById(R.id.ivLoginPortrait)
+            ivLoginPortrait = view.findViewById(R.id.ivProfile)
             btnRegister = view.findViewById(R.id.btnRegisterLogin)
             btnLogin = view.findViewById(R.id.btnLogin)
             etEmailAddress = view.findViewById(R.id.etEmailAddress)
