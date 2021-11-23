@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "692783803215",
+    "project_id": "payment-sharing-app",
+    "storage_bucket": "payment-sharing-app.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:692783803215:android:896bd80009cd70671bb33a",
+        "android_client_info": {
+          "package_name": "com.example.software_engineering_project"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "692783803215-siuh70tgpv3s1rt0doi3qr2qq3hug082.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCIv2OK5DPKzWZS4gY7NXuO2uEaU2C1fdU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "692783803215-siuh70tgpv3s1rt0doi3qr2qq3hug082.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
