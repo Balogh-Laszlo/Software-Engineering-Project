@@ -17,9 +17,11 @@ import com.example.software_engineering_project.LoginActivity
 import com.example.software_engineering_project.R
 import com.example.software_engineering_project.activityResult.PickPhoto
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseAuthUserCollisionException
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.FirebaseStorage
+import java.lang.Exception
 
 
 class RegisterFragment : Fragment() {
@@ -108,27 +110,39 @@ class RegisterFragment : Fragment() {
 //            mLoadingBar.setMessage("Please wait")
 //            mLoadingBar.setCanceledOnTouchOutside(false)
 //            mLoadingBar.show()
-
+            btnRegister.isEnabled = false
             mAuth.createUserWithEmailAndPassword(emailAddress,password).addOnCompleteListener { result ->
-                if(result.isSuccessful){
+                if(result.isSuccessful) {
                     findNavController().navigate(R.id.action_registerFragment_to_registrationSuccessfulFragment)
-                    mAuth.currentUser?.let { it.sendEmailVerification().addOnCompleteListener { task ->
-                        if(task.isSuccessful){
-                            showError("Email sent to $emailAddress")
+                    mAuth.currentUser?.let {
+                        it.sendEmailVerification().addOnCompleteListener { task ->
+                            if (task.isSuccessful) {
+                                showError("Email sent to $emailAddress")
+                                if(imageUri != null) {
+                                    uploadImage()
+                                }
+                                else{
+                                    saveUserDataToFirestore()
+                                }
+
+                            }
                         }
                     }
+                }
+                else{
+                    btnRegister.isEnabled = true
+                    try{
+                        throw result.exception!!
                     }
+                    catch (e: FirebaseAuthUserCollisionException){
+                        Toast.makeText(requireContext(),"${e.message}",Toast.LENGTH_LONG).show()
 
+                    }
+                    catch (e:Exception){
+                        Toast.makeText(requireContext(),"Something went wrong try again later!",Toast.LENGTH_LONG).show()
+                    }
                 }
-                else{
-                    Toast.makeText(requireContext(),"${result.result}",Toast.LENGTH_LONG).show()
-                }
-                if(imageUri != null) {
-                    uploadImage()
-                }
-                else{
-                    saveUserDataToFirestore()
-                }
+
             }
 
         }

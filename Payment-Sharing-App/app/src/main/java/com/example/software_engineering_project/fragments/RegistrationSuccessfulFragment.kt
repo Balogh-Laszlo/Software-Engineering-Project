@@ -7,6 +7,9 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
+import androidx.activity.OnBackPressedCallback
+import androidx.appcompat.app.AlertDialog
+import androidx.navigation.fragment.findNavController
 import com.example.software_engineering_project.MainActivity
 import com.example.software_engineering_project.R
 
@@ -19,11 +22,27 @@ class RegistrationSuccessfulFragment : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
+        val callback : OnBackPressedCallback = object: OnBackPressedCallback(true){
+            override fun handleOnBackPressed() {
+                showDialog()
+            }
+        }
+        requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner,callback)
         // Inflate the layout for this fragment
         val view = inflater.inflate(R.layout.fragment_registration_successful, container, false)
         initializeView(view)
         setOnClickListeners()
         return view
+    }
+
+    private fun showDialog() {
+        AlertDialog.Builder(requireContext())
+            .setTitle("Exit")
+            .setMessage("Are you sure you want to exit?")
+            .setNegativeButton("Cancel",null)
+            .setPositiveButton("OK"){ _, _ ->
+                requireActivity().finish()
+            }.show()
     }
 
     private fun setOnClickListeners() {
