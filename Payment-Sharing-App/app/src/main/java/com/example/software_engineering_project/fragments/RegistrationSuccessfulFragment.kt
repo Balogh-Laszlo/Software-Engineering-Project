@@ -9,7 +9,6 @@ import android.view.ViewGroup
 import android.widget.Button
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AlertDialog
-import androidx.navigation.fragment.findNavController
 import com.example.software_engineering_project.MainActivity
 import com.example.software_engineering_project.R
 
