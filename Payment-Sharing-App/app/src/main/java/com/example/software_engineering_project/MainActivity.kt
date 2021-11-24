@@ -2,6 +2,8 @@ package com.example.software_engineering_project
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.view.Menu
+import android.view.MenuItem
 import android.widget.TextView
 import androidx.navigation.findNavController
 import com.google.android.material.bottomnavigation.BottomNavigationView
@@ -34,5 +36,20 @@ class MainActivity : AppCompatActivity() {
             }
             true
         }
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        menuInflater.inflate(R.menu.top_menu, menu)
+        return true
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        when(item.itemId) {
+            // TODO: Change destination fragments
+            R.id.profile -> findNavController(R.id.nav_host_fragment).navigate(R.id.homeFragment)
+            R.id.notifications -> findNavController(R.id.nav_host_fragment).navigate(R.id.homeFragment)
+            else -> findNavController(R.id.nav_host_fragment).navigate(R.id.homeFragment)
+        }
+        return true
     }
 }
