@@ -9,5 +9,43 @@
         android:id="@+id/homeFragment"
         android:name="com.example.software_engineering_project.fragments.HomeFragment"
         android:label="fragment_home"
-        tools:layout="@layout/fragment_home" />
+        tools:layout="@layout/fragment_home" >
+        <action
+            android:id="@+id/action_homeFragment_to_notificationsFragment"
+            app:destination="@id/notificationsFragment" />
+        <action
+            android:id="@+id/action_homeFragment_to_partyListFragment"
+            app:destination="@id/partyListFragment" />
+        <action
+            android:id="@+id/action_homeFragment_to_newPartyFragment"
+            app:destination="@id/newPartyFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/newPartyFragment"
+        android:name="com.example.software_engineering_project.fragments.NewPartyFragment"
+        android:label="fragment_new_party"
+        tools:layout="@layout/fragment_new_party" >
+        <action
+            android:id="@+id/action_newPartyFragment_to_partyFragment"
+            app:destination="@id/partyFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/notificationsFragment"
+        android:name="com.example.software_engineering_project.fragments.NotificationsFragment"
+        android:label="fragment_notifications"
+        tools:layout="@layout/fragment_notifications" />
+    <fragment
+        android:id="@+id/partyFragment"
+        android:name="com.example.software_engineering_project.fragments.PartyFragment"
+        android:label="fragment_party"
+        tools:layout="@layout/fragment_party" />
+    <fragment
+        android:id="@+id/partyListFragment"
+        android:name="com.example.software_engineering_project.fragments.PartyListFragment"
+        android:label="fragment_party_list"
+        tools:layout="@layout/fragment_party_list" >
+        <action
+            android:id="@+id/action_partyListFragment_to_partyFragment"
+            app:destination="@id/partyFragment" />
+    </fragment>
 </navigation>

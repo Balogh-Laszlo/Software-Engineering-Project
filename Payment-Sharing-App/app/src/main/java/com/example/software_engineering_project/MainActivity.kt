@@ -30,9 +30,8 @@ class MainActivity : AppCompatActivity() {
         bottomNavBar.setOnItemSelectedListener { menuItem ->
             when(menuItem.itemId) {
                 R.id.home -> findNavController(R.id.nav_host_fragment).navigate(R.id.homeFragment)
-                // TODO: Change destination fragments
-                R.id.new_party -> findNavController(R.id.nav_host_fragment).navigate(R.id.homeFragment)
-                R.id.list_parties -> findNavController(R.id.nav_host_fragment).navigate(R.id.homeFragment)
+                R.id.new_party -> findNavController(R.id.nav_host_fragment).navigate(R.id.newPartyFragment)
+                R.id.list_parties -> findNavController(R.id.nav_host_fragment).navigate(R.id.partyListFragment)
                 else -> findNavController(R.id.nav_host_fragment).navigate(R.id.homeFragment)
             }
             true
@@ -48,7 +47,7 @@ class MainActivity : AppCompatActivity() {
         when(item.itemId) {
             // TODO: Change destination fragments
             R.id.profile -> findNavController(R.id.nav_host_fragment).navigate(R.id.homeFragment)
-            R.id.notifications -> findNavController(R.id.nav_host_fragment).navigate(R.id.homeFragment)
+            R.id.notifications -> findNavController(R.id.nav_host_fragment).navigate(R.id.notificationsFragment)
             else -> findNavController(R.id.nav_host_fragment).navigate(R.id.homeFragment)
         }
         return true
