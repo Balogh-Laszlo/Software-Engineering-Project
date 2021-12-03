@@ -5,6 +5,19 @@
     android:layout_width="match_parent"
     android:layout_height="86dp">
 
+    <ImageView
+        android:id="@+id/partyList_ivOwnerPicture"
+        android:layout_width="42dp"
+        android:layout_height="42dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="8dp"
+        android:background="@drawable/round_border_style"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@drawable/ic_outline_person_24" />
+
     <TextView
         android:id="@+id/partyList_tvPartyName"
         android:layout_width="wrap_content"
@@ -15,8 +28,9 @@
         android:text="PartyName"
         android:textAppearance="@style/TextAppearance.AppCompat.Medium"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintStart_toEndOf="@+id/partyList_ivOwnerPicture"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.565" />
 
     <TextView
         android:id="@+id/partyList_tvTotal"
@@ -27,12 +41,12 @@
         android:layout_marginBottom="8dp"
         android:text="Total $"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@+id/imageButton"
+        app:layout_constraintEnd_toStartOf="@+id/partyList_btnDelete"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="0.507" />
 
     <ImageButton
-        android:id="@+id/imageButton"
+        android:id="@+id/partyList_btnDelete"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
