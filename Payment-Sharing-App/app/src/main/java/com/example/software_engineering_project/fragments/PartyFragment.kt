@@ -11,6 +11,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.software_engineering_project.adapters.ItemAdapter
 import com.example.software_engineering_project.R
 import com.example.software_engineering_project.adapters.MemberAdapter
+import com.example.software_engineering_project.utils.Item
 import com.example.software_engineering_project.utils.User
 
 
@@ -46,8 +47,15 @@ class PartyFragment : Fragment() {
         rvMembers.adapter = memberAdapter
         rvMembers.layoutManager = LinearLayoutManager(requireContext(),LinearLayoutManager.HORIZONTAL,false)
 
-        itemAdapter = ItemAdapter()
-//        rvItems.adapter = itemAdapter
+        itemAdapter = ItemAdapter(requireContext(), listOf(Item("Beer",
+            "1",
+            "https://firebasestorage.googleapis.com/v0/b/payment-sharing-app.appspot.com/o/itemPhotos%2Fbeer.jpg?alt=media&token=a9887272-6666-422f-93d6-99945532b214",
+            2,4.5),
+            Item("Pálinka",
+            "2",
+            "https://firebasestorage.googleapis.com/v0/b/payment-sharing-app.appspot.com/o/itemPhotos%2Fpalinka.jpg?alt=media&token=8acaab97-d773-429d-93fc-3f811d318546",
+            3,12.5)))
+        rvItems.adapter = itemAdapter
         rvItems.layoutManager = LinearLayoutManager(requireContext(),LinearLayoutManager.VERTICAL,false)
     }
 
