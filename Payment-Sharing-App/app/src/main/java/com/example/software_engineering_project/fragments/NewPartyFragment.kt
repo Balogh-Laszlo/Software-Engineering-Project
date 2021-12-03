@@ -5,12 +5,9 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Button
 import com.example.software_engineering_project.R
-
-// TODO: Rename parameter arguments, choose names that match
-// the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-private const val ARG_PARAM1 = "param1"
-private const val ARG_PARAM2 = "param2"
+import com.google.android.material.textfield.TextInputEditText
 
 /**
  * A simple [Fragment] subclass.
@@ -18,16 +15,14 @@ private const val ARG_PARAM2 = "param2"
  * create an instance of this fragment.
  */
 class NewPartyFragment : Fragment() {
-    // TODO: Rename and change types of parameters
-    private var param1: String? = null
-    private var param2: String? = null
+
+    private lateinit var etCode: TextInputEditText
+    private lateinit var btnJoin: Button
+    private lateinit var etPartyName: TextInputEditText
+    private lateinit var btnCreate: Button
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        arguments?.let {
-            param1 = it.getString(ARG_PARAM1)
-            param2 = it.getString(ARG_PARAM2)
-        }
     }
 
     override fun onCreateView(
@@ -35,7 +30,23 @@ class NewPartyFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View? {
         // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_new_party, container, false)
+        val view = inflater.inflate(R.layout.fragment_new_party, container, false)
+        view?.apply {
+            initializeViews(this)
+            setOnClickListeners(this)
+        }
+        return view
+    }
+
+    private fun setOnClickListeners(view: View) {
+        //TODO("Not yet implemented")
+    }
+
+    private fun initializeViews(view: View) {
+        etCode = view.findViewById(R.id.newparty_etCode)
+        btnJoin = view.findViewById(R.id.newparty_btnJoin)
+        etPartyName = view.findViewById(R.id.newparty_etPartyName)
+        btnCreate = view.findViewById(R.id.newparty_btnCreate)
     }
 
     companion object {
@@ -52,8 +63,6 @@ class NewPartyFragment : Fragment() {
         fun newInstance(param1: String, param2: String) =
             NewPartyFragment().apply {
                 arguments = Bundle().apply {
-                    putString(ARG_PARAM1, param1)
-                    putString(ARG_PARAM2, param2)
                 }
             }
     }
