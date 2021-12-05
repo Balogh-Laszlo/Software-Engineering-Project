@@ -9,20 +9,21 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.example.software_engineering_project.R
+import com.example.software_engineering_project.utils.Member
 import com.example.software_engineering_project.utils.User
 
 class MemberAdapter(
-    private val list:List<User>,
+    private val list:List<Member>,
     private val context:Context
 ):RecyclerView.Adapter<MemberAdapter.ViewHolder>() {
     inner class ViewHolder(itemView:View) :RecyclerView.ViewHolder(itemView){
         private val ivMemberImage = itemView.findViewById<ImageView>(R.id.ivMemberImage)
         private val tvMemberName = itemView.findViewById<TextView>(R.id.tvMemberName)
         fun bind(position: Int) {
-            tvMemberName.text = list[position].userName
-            if (list[position].userPhoto != null && list[position].userPhoto.isNotEmpty()){
+            tvMemberName.text = list[position].user_name
+            if (list[position].user_photo != null && list[position].user_photo.isNotEmpty()){
                 Glide.with(context)
-                    .load(list[position].userPhoto)
+                    .load(list[position].user_photo)
                     .circleCrop()
                     .into(ivMemberImage)
             }

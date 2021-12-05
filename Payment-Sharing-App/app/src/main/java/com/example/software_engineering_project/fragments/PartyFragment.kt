@@ -91,7 +91,7 @@ class PartyFragment : Fragment() {
     private fun getItemsData(partyItems: MutableList<Int>) {
         var i = 0
         db.collection("Item")
-            .whereIn("item_id", party!!.party_items)
+            .whereIn("item_id", partyItems)
             .get()
             .addOnSuccessListener {
                 for (document in it) {
@@ -158,22 +158,24 @@ class PartyFragment : Fragment() {
     }
 
     private fun registerAdapters() {
-        memberAdapter = MemberAdapter(listOf(User("laco.balogh@yahoo.com",
-            "93wKhX3iB3cLKvP7D1do6K0JnYx1",
-        "Laci",
-        "https://firebasestorage.googleapis.com/v0/b/payment-sharing-app.appspot.com/o/userPhotos%2Flaco.balogh%40yahoo.com?alt=media&token=0a05eb48-7235-4c23-8e3e-da42908cb6dd")
-        ),requireContext())
+//        memberAdapter = MemberAdapter(listOf(User("laco.balogh@yahoo.com",
+//            "93wKhX3iB3cLKvP7D1do6K0JnYx1",
+//        "Laci",
+//        "https://firebasestorage.googleapis.com/v0/b/payment-sharing-app.appspot.com/o/userPhotos%2Flaco.balogh%40yahoo.com?alt=media&token=0a05eb48-7235-4c23-8e3e-da42908cb6dd")
+//        ),requireContext())
+        memberAdapter = MemberAdapter(members,requireContext())
         rvMembers.adapter = memberAdapter
         rvMembers.layoutManager = LinearLayoutManager(requireContext(),LinearLayoutManager.HORIZONTAL,false)
 
-        itemAdapter = ItemAdapter(requireContext(), listOf(Item("Beer",
-            1,
-            "https://firebasestorage.googleapis.com/v0/b/payment-sharing-app.appspot.com/o/itemPhotos%2Fbeer.jpg?alt=media&token=a9887272-6666-422f-93d6-99945532b214",
-            2,4.5),
-            Item("Pálinka",
-            2,
-            "https://firebasestorage.googleapis.com/v0/b/payment-sharing-app.appspot.com/o/itemPhotos%2Fpalinka.jpg?alt=media&token=8acaab97-d773-429d-93fc-3f811d318546",
-            3,12.5)))
+//        itemAdapter = ItemAdapter(requireContext(), listOf(Item("Beer",
+//            1,
+//            "https://firebasestorage.googleapis.com/v0/b/payment-sharing-app.appspot.com/o/itemPhotos%2Fbeer.jpg?alt=media&token=a9887272-6666-422f-93d6-99945532b214",
+//            2,4.5),
+//            Item("Pálinka",
+//            2,
+//            "https://firebasestorage.googleapis.com/v0/b/payment-sharing-app.appspot.com/o/itemPhotos%2Fpalinka.jpg?alt=media&token=8acaab97-d773-429d-93fc-3f811d318546",
+//            3,12.5)))
+        itemAdapter = ItemAdapter(requireContext(),items)
         rvItems.adapter = itemAdapter
         rvItems.layoutManager = LinearLayoutManager(requireContext(),LinearLayoutManager.VERTICAL,false)
     }
