@@ -1,18 +1,26 @@
 package com.example.software_engineering_project.fragments
 
 import android.os.Bundle
+import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
+import android.widget.Toast
+import androidx.fragment.app.activityViewModels
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.software_engineering_project.adapters.ItemAdapter
 import com.example.software_engineering_project.R
+import com.example.software_engineering_project.SharedViewModel
 import com.example.software_engineering_project.adapters.MemberAdapter
 import com.example.software_engineering_project.utils.Item
+import com.example.software_engineering_project.utils.Member
+import com.example.software_engineering_project.utils.Party
 import com.example.software_engineering_project.utils.User
+import com.google.firebase.firestore.ktx.firestore
+import com.google.firebase.ktx.Firebase
 
 
 class PartyFragment : Fragment() {
@@ -21,6 +29,14 @@ class PartyFragment : Fragment() {
     private lateinit var rvItems:RecyclerView
     private lateinit var memberAdapter: MemberAdapter
     private lateinit var itemAdapter: ItemAdapter
+
+    private val sharedViewModel:SharedViewModel by activityViewModels()
+    private val db = Firebase.firestore
+    private var party: Party? = null
+    private val items = mutableListOf<Item>()
+    private val members = mutableListOf<Member>()
+
+    private var isReady = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -34,8 +50,111 @@ class PartyFragment : Fragment() {
         val view = inflater.inflate(R.layout.fragment_party, container, false)
         initializeView(view)
         registerListeners()
-        registerAdapters()
+        sharedViewModel.selectedPartyID.value = 1
+        sharedViewModel.selectedPartyID.observe(viewLifecycleOwner,{
+            getPartyData(it)
+
+        })
+
         return view
+    }
+
+    private fun getPartyData(partyID: Int?) {
+        if(partyID != null){
+            db.collection("Party")
+                .whereEqualTo("party_id",partyID)
+                .get()
+                .addOnSuccessListener {
+                    for (document in it){
+                        Log.d("xxx",document.id+document.data)
+                        party = Party(document.data["is_active"] as Boolean,
+                            (document.data["party_id"] as Number).toInt(),
+                            document.data["party_name"].toString(),
+                            document.data["password"].toString(),
+                            (document.data["sum"] as Number).toDouble(),
+                            document.data["party_members"] as MutableList<String>,
+                            document.data["party_items"] as MutableList<Int>,
+                            document.data["item_count"] as MutableList<Int>,
+                            document.data["item_price"] as MutableList<Double>
+                            )
+                    }
+                    ready()
+                    getMembersData(party!!.party_members)
+                    getItemsData(party!!.party_items)
+                }
+                .addOnFailureListener {
+                    Toast.makeText(requireContext(),"Something went wrong. Try again later!",Toast.LENGTH_SHORT).show()
+                }
+        }
+    }
+
+    private fun getItemsData(partyItems: MutableList<Int>) {
+        var i = 0
+        db.collection("Item")
+            .whereIn("item_id", party!!.party_items)
+            .get()
+            .addOnSuccessListener {
+                for (document in it) {
+                    if (party!!.item_count.size >= i) {
+                        items.add(
+                            Item(
+                                document.data["item_name"].toString(),
+                                (document.data["item_id"] as Number).toInt(),
+                                document.data["item_photo"].toString(),
+                                party!!.item_count[i],
+                                party!!.item_price[i]
+                            )
+                        )
+                    }
+                    ++i
+                }
+
+                Log.d("xxx", items.toString())
+                ready()
+            }
+            .addOnFailureListener {
+                Toast.makeText(
+                    requireContext(),
+                    "Something went wrong. Try again later!",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+
+    }
+
+    private fun getMembersData(partyMembers: MutableList<String>) {
+        db.collection("User Data")
+            .whereIn("user_id",party!!.party_members)
+            .get()
+            .addOnSuccessListener {
+                Log.d("xxx","Success")
+                for (document in it) {
+                    if (document.data["photo"] != null && document.data["photo"].toString()
+                            .isNotEmpty()
+                    ) {
+                        members.add(
+                            Member(
+                                document.data["user_id"].toString(),
+                                document.data["user_name"].toString(),
+                                document.data["photo"].toString()
+                            )
+                        )
+                    }else{
+                        members.add(
+                            Member(
+                                document.data["user_id"].toString(),
+                                document.data["user_name"].toString(),
+                                ""
+                            )
+                        )
+                    }
+                }
+                Log.d("xxx",members.toString())
+                ready()
+            }
+            .addOnFailureListener {
+                Toast.makeText(requireContext(),"Something went wrong. Try again later!",Toast.LENGTH_SHORT).show()
+            }
     }
 
     private fun registerAdapters() {
@@ -48,11 +167,11 @@ class PartyFragment : Fragment() {
         rvMembers.layoutManager = LinearLayoutManager(requireContext(),LinearLayoutManager.HORIZONTAL,false)
 
         itemAdapter = ItemAdapter(requireContext(), listOf(Item("Beer",
-            "1",
+            1,
             "https://firebasestorage.googleapis.com/v0/b/payment-sharing-app.appspot.com/o/itemPhotos%2Fbeer.jpg?alt=media&token=a9887272-6666-422f-93d6-99945532b214",
             2,4.5),
             Item("Pálinka",
-            "2",
+            2,
             "https://firebasestorage.googleapis.com/v0/b/payment-sharing-app.appspot.com/o/itemPhotos%2Fpalinka.jpg?alt=media&token=8acaab97-d773-429d-93fc-3f811d318546",
             3,12.5)))
         rvItems.adapter = itemAdapter
@@ -76,5 +195,12 @@ class PartyFragment : Fragment() {
             rvMembers = view.findViewById(R.id.rvMembers)
         }
     }
-
+    private fun ready(){
+        if( isReady == 2){
+            registerAdapters()
+        }
+        else{
+            isReady++
+        }
+    }
 }
