@@ -1,5 +1,6 @@
 package com.example.software_engineering_project.fragments
 
+import android.app.Dialog
 import android.os.Bundle
 import android.util.Log
 import androidx.fragment.app.Fragment
@@ -7,10 +8,13 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
+import android.widget.ImageButton
+import android.widget.ImageView
 import android.widget.Toast
 import androidx.fragment.app.activityViewModels
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.bumptech.glide.Glide
 import com.example.software_engineering_project.adapters.ItemAdapter
 import com.example.software_engineering_project.R
 import com.example.software_engineering_project.SharedViewModel
@@ -29,6 +33,7 @@ class PartyFragment : Fragment() {
     private lateinit var rvItems:RecyclerView
     private lateinit var memberAdapter: MemberAdapter
     private lateinit var itemAdapter: ItemAdapter
+    private lateinit var btnAddItem: ImageButton
 
     private val sharedViewModel:SharedViewModel by activityViewModels()
     private val db = Firebase.firestore
@@ -184,6 +189,33 @@ class PartyFragment : Fragment() {
         btnSplitBills.setOnClickListener {
             splitBills()
         }
+        btnAddItem.setOnClickListener {
+            addItem()
+        }
+    }
+
+    private fun addItem() {
+        Log.d("xxx","Add item clicked")
+        val dialog = Dialog(requireContext(),R.style.DialogStyle)
+        dialog.setContentView(R.layout.item_type_dialog_layout)
+
+        dialog.window!!.setBackgroundDrawableResource(R.drawable.bg_dialog)
+
+        val btnDrink = dialog.findViewById<ImageView>(R.id.ivDrink)
+        Glide.with(requireContext())
+            .load(R.drawable.drinks)
+            .into(btnDrink)
+
+        val btnFood = dialog.findViewById<ImageView>(R.id.ivFood)
+        Glide.with(requireContext())
+            .load(R.drawable.food4)
+            .into(btnFood)
+
+        val btnOther = dialog.findViewById<ImageView>(R.id.ivOther)
+        Glide.with(requireContext())
+            .load(R.drawable.other)
+            .into(btnOther)
+        dialog.show()
     }
 
     private fun splitBills() {
@@ -195,6 +227,7 @@ class PartyFragment : Fragment() {
             btnSplitBills = view.findViewById(R.id.btnSplitBills)
             rvItems = view.findViewById(R.id.rvItems)
             rvMembers = view.findViewById(R.id.rvMembers)
+            btnAddItem = view.findViewById(R.id.btnAddItem)
         }
     }
     private fun ready(){
