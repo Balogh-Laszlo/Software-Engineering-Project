@@ -12,17 +12,16 @@ import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.Toast
 import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.MutableLiveData
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.example.software_engineering_project.adapters.ItemAdapter
 import com.example.software_engineering_project.R
 import com.example.software_engineering_project.SharedViewModel
+import com.example.software_engineering_project.adapters.ItemListAdapterDialog
 import com.example.software_engineering_project.adapters.MemberAdapter
-import com.example.software_engineering_project.utils.Item
-import com.example.software_engineering_project.utils.Member
-import com.example.software_engineering_project.utils.Party
-import com.example.software_engineering_project.utils.User
+import com.example.software_engineering_project.utils.*
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 
@@ -42,6 +41,11 @@ class PartyFragment : Fragment() {
     private val members = mutableListOf<Member>()
 
     private var isReady = 0
+
+    private var type =""
+    private val specificItems = MutableLiveData<MutableList<SpecificItem>>()
+
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -215,8 +219,77 @@ class PartyFragment : Fragment() {
         Glide.with(requireContext())
             .load(R.drawable.other)
             .into(btnOther)
+
+        setDialogListeners(btnDrink,btnFood,btnOther,dialog)
         dialog.show()
     }
+
+    private fun setDialogListeners(
+        btnDrink: ImageView,
+        btnFood: ImageView,
+        btnOther: ImageView,
+        dialog:Dialog
+    ) {
+        btnDrink.setOnClickListener {
+            type = "drink"
+            dialog.dismiss()
+            itemList()
+        }
+        btnFood.setOnClickListener {
+            type = "food"
+            dialog.dismiss()
+            itemList()
+        }
+        btnOther.setOnClickListener {
+            type = "other"
+            dialog.dismiss()
+            itemList()
+        }
+    }
+
+    private fun itemList() {
+        val dialog = Dialog(requireContext(),R.style.DialogStyle)
+        dialog.setContentView(R.layout.item_list_dialog_layout)
+
+        dialog.window!!.setBackgroundDrawableResource(R.drawable.bg_dialog)
+
+        val rvItemList = dialog.findViewById<RecyclerView>(R.id.rvItemListDialog)
+        val btnNewItem = dialog.findViewById<Button>(R.id.btnNewItemDialog)
+
+        getItems()
+        specificItems.observe(viewLifecycleOwner){
+            rvItemList.adapter = ItemListAdapterDialog(requireContext(), specificItems.value!!)
+            rvItemList.layoutManager = LinearLayoutManager(requireContext(),LinearLayoutManager.VERTICAL,false)
+            Log.d("xxx",specificItems.value.toString())
+        }
+
+
+        dialog.show()
+    }
+
+    private fun getItems() {
+        val list = mutableListOf<SpecificItem>()
+        db.collection("Item")
+            .whereEqualTo("type",type)
+            .get()
+            .addOnSuccessListener {
+                for (document in it){
+                    list.add(
+                        SpecificItem(
+                            document.data["item_name"].toString(),
+                            (document.data["item_id"] as Number).toInt(),
+                            document.data["item_photo"].toString()
+                    )
+                    )
+                }
+                specificItems.value = list
+                Log.d("xxx",specificItems.value.toString())
+            }
+            .addOnFailureListener {
+                Toast.makeText(requireContext(),"Something went wrong. Try again later!",Toast.LENGTH_SHORT).show()
+            }
+    }
+
 
     private fun splitBills() {
         TODO("Not yet implemented")

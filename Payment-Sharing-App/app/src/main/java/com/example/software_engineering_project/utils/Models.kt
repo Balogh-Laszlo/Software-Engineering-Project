@@ -4,6 +4,8 @@ data class User(val email:String, val userId:String, val userName:String, val us
 
 data class Item(val item_name:String, val item_id:Int, val item_photo:String, val item_count:Int, val item_price:Double)
 
+data class SpecificItem(val item_name: String, val item_id: Int, val item_photo: String)
+
 data class Party(var is_active:Boolean,
                  val party_id:Int,
                  val party_name:String,

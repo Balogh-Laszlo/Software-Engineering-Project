@@ -18,4 +18,6 @@
     <string name="_0_lei">0 lei</string>
     <string name="split_bills">Split bills</string>
     <string name="choose_type">Choose Type</string>
+    <string name="choose_an_existing_item_or_create_your_own">Choose an existing item or create your own</string>
+    <string name="new_item">New Item</string>
 </resources>
