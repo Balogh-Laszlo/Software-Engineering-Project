@@ -1,0 +1,8 @@
+//Login
+User Data(user_id:UID, user_name:String, photo:String)
+Authentication(identifier:Email, Created:Date, Singed In:Date, User UID: UID)(auto generated)
+ 
+
+//Party
+Party(party_id:Number, password:String, sum:Number, is_active:Boolean, party_items:Array<Number>, party_members:Array<Number>)
+Item(item_id: Number, item_name:String, item_price:Number, item_photo:String)
