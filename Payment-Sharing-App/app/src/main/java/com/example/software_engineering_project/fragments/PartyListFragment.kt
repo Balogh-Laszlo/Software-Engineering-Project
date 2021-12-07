@@ -5,6 +5,7 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.recyclerview.widget.RecyclerView
 import com.example.software_engineering_project.R
 
 /**
@@ -13,6 +14,8 @@ import com.example.software_engineering_project.R
  * create an instance of this fragment.
  */
 class PartyListFragment : Fragment() {
+
+    private lateinit var rvPartyList: RecyclerView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -24,7 +27,9 @@ class PartyListFragment : Fragment() {
     ): View? {
         // Inflate the layout for this fragment
         val view = inflater.inflate(R.layout.fragment_party_list, container, false)
-
+        view?.apply {
+            rvPartyList = this.findViewById(R.id.partyList_rvPartyList)
+        }
         return view
     }
 
