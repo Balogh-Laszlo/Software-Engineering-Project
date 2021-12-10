@@ -59,7 +59,6 @@ class PartyFragment : Fragment() {
         val view = inflater.inflate(R.layout.fragment_party, container, false)
         initializeView(view)
         registerListeners()
-        sharedViewModel.selectedPartyID.value = 1
         sharedViewModel.selectedPartyID.observe(viewLifecycleOwner,{
             getPartyData(it)
 
