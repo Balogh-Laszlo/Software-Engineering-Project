@@ -1,11 +1,13 @@
 package com.example.software_engineering_project.fragments
 
 import android.os.Bundle
+import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
+import android.widget.Toast
 import com.example.software_engineering_project.R
 import com.google.android.material.textfield.TextInputEditText
 
@@ -39,7 +41,22 @@ class NewPartyFragment : Fragment() {
     }
 
     private fun setOnClickListeners(view: View) {
-        //TODO("Not yet implemented")
+        btnJoin.setOnClickListener {
+            Log.d("xxx", "Join button pressed")
+            if (etCode.text.isNullOrBlank()) {
+                Toast.makeText(view.context, "No code given.", Toast.LENGTH_SHORT).show()
+            } else {
+                // JOIN PARTY
+            }
+        }
+        btnCreate.setOnClickListener {
+            Log.d("xxx", "Create button pressed")
+            if (etPartyName.text.isNullOrBlank()) {
+                Toast.makeText(view.context, "No party name given.", Toast.LENGTH_SHORT).show()
+            } else {
+                // CREATE PARTY
+            }
+        }
     }
 
     private fun initializeViews(view: View) {
