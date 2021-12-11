@@ -1,33 +1,40 @@
 package com.example.software_engineering_project.fragments
 
 import android.os.Bundle
+import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.MutableLiveData
+import androidx.navigation.fragment.findNavController
+import androidx.recyclerview.widget.DividerItemDecoration
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.example.software_engineering_project.R
-
-// TODO: Rename parameter arguments, choose names that match
-// the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-private const val ARG_PARAM1 = "param1"
-private const val ARG_PARAM2 = "param2"
+import com.example.software_engineering_project.SharedViewModel
+import com.example.software_engineering_project.adapters.PartyListAdapter
+import com.example.software_engineering_project.utils.Party
+import com.example.software_engineering_project.utils.SpecificItem
+import com.google.firebase.firestore.ktx.firestore
+import com.google.firebase.ktx.Firebase
 
 /**
  * A simple [Fragment] subclass.
  * Use the [PartyListFragment.newInstance] factory method to
  * create an instance of this fragment.
  */
-class PartyListFragment : Fragment() {
-    // TODO: Rename and change types of parameters
-    private var param1: String? = null
-    private var param2: String? = null
+class PartyListFragment : Fragment(), PartyListAdapter.OnItemClickListener {
+
+    private lateinit var rvPartyList: RecyclerView
+    private lateinit var adapter: PartyListAdapter
+    private val db = Firebase.firestore
+    private val parties = MutableLiveData<MutableList<Party>>()
+    private val sharedViewModel: SharedViewModel by activityViewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        arguments?.let {
-            param1 = it.getString(ARG_PARAM1)
-            param2 = it.getString(ARG_PARAM2)
-        }
     }
 
     override fun onCreateView(
@@ -35,7 +42,57 @@ class PartyListFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View? {
         // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_party_list, container, false)
+        val view = inflater.inflate(R.layout.fragment_party_list, container, false)
+        view?.apply {
+            rvPartyList = view.findViewById(R.id.partyList_rvPartyList)
+            setupRecyclerView()
+            parties.observe(viewLifecycleOwner) {
+                adapter.setData(parties.value as ArrayList<Party>)
+                adapter.notifyDataSetChanged()
+            }
+            loadParties()
+        }
+        return view
+    }
+
+    private fun setupRecyclerView() {
+        adapter = PartyListAdapter(requireContext(), ArrayList<Party>(), this)
+        rvPartyList.adapter = adapter
+        rvPartyList.layoutManager = LinearLayoutManager(this.context)
+        rvPartyList.addItemDecoration(
+            DividerItemDecoration(
+                activity,
+                DividerItemDecoration.VERTICAL
+            )
+        )
+        rvPartyList.setHasFixedSize(true)
+    }
+
+    private fun loadParties() {
+        parties.value = mutableListOf<Party>()
+        db.collection("Party").get()
+            .addOnSuccessListener { documents ->
+                for(document in documents) {
+                    val party = Party(document.data["is_active"] as Boolean,
+                        (document.data["party_id"] as Number).toInt(),
+                        document.data["party_name"].toString(),
+                        document.data["password"].toString(),
+                        (document.data["sum"] as Number).toDouble(),
+                        document.data["party_members"] as MutableList<String>,
+                        document.data["party_items"] as MutableList<Int>,
+                        document.data["item_count"] as MutableList<Int>,
+                        document.data["item_price"] as MutableList<Double>
+                    )
+                    parties.value!!.add(party)
+                }
+                adapter.setData(parties.value as ArrayList<Party>)
+                adapter.notifyDataSetChanged()
+            }
+    }
+
+    override fun onItemClick(position: Int) {
+        sharedViewModel.selectedPartyID.value = parties.value?.get(position)?.party_id
+        findNavController().navigate(R.id.action_partyListFragment_to_partyFragment)
     }
 
     companion object {
@@ -52,8 +109,6 @@ class PartyListFragment : Fragment() {
         fun newInstance(param1: String, param2: String) =
             PartyListFragment().apply {
                 arguments = Bundle().apply {
-                    putString(ARG_PARAM1, param1)
-                    putString(ARG_PARAM2, param2)
                 }
             }
     }

@@ -1,33 +1,54 @@
 package com.example.software_engineering_project.fragments
 
+import android.app.Dialog
 import android.os.Bundle
+import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Button
+import android.widget.ImageButton
+import android.widget.ImageView
+import android.widget.Toast
+import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.MutableLiveData
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import com.bumptech.glide.Glide
+import com.example.software_engineering_project.adapters.ItemAdapter
 import com.example.software_engineering_project.R
+import com.example.software_engineering_project.SharedViewModel
+import com.example.software_engineering_project.adapters.ItemListAdapterDialog
+import com.example.software_engineering_project.adapters.MemberAdapter
+import com.example.software_engineering_project.utils.*
+import com.google.firebase.firestore.ktx.firestore
+import com.google.firebase.ktx.Firebase
 
-// TODO: Rename parameter arguments, choose names that match
-// the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-private const val ARG_PARAM1 = "param1"
-private const val ARG_PARAM2 = "param2"
 
-/**
- * A simple [Fragment] subclass.
- * Use the [PartyFragment.newInstance] factory method to
- * create an instance of this fragment.
- */
 class PartyFragment : Fragment() {
-    // TODO: Rename and change types of parameters
-    private var param1: String? = null
-    private var param2: String? = null
+    private lateinit var btnSplitBills: Button
+    private lateinit var rvMembers:RecyclerView
+    private lateinit var rvItems:RecyclerView
+    private lateinit var memberAdapter: MemberAdapter
+    private lateinit var itemAdapter: ItemAdapter
+    private lateinit var btnAddItem: ImageButton
+
+    private val sharedViewModel:SharedViewModel by activityViewModels()
+    private val db = Firebase.firestore
+    private var party: Party? = null
+    private val items = mutableListOf<Item>()
+    private val members = mutableListOf<Member>()
+
+    private var isReady = 0
+
+    private var type =""
+    private val specificItems = MutableLiveData<MutableList<SpecificItem>>()
+
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        arguments?.let {
-            param1 = it.getString(ARG_PARAM1)
-            param2 = it.getString(ARG_PARAM2)
-        }
     }
 
     override fun onCreateView(
@@ -35,26 +56,258 @@ class PartyFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View? {
         // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_party, container, false)
+        val view = inflater.inflate(R.layout.fragment_party, container, false)
+        initializeView(view)
+        registerListeners()
+        sharedViewModel.selectedPartyID.observe(viewLifecycleOwner,{
+            getPartyData(it)
+
+        })
+
+        return view
     }
 
-    companion object {
-        /**
-         * Use this factory method to create a new instance of
-         * this fragment using the provided parameters.
-         *
-         * @param param1 Parameter 1.
-         * @param param2 Parameter 2.
-         * @return A new instance of fragment PartyFragment.
-         */
-        // TODO: Rename and change types and number of parameters
-        @JvmStatic
-        fun newInstance(param1: String, param2: String) =
-            PartyFragment().apply {
-                arguments = Bundle().apply {
-                    putString(ARG_PARAM1, param1)
-                    putString(ARG_PARAM2, param2)
+    private fun getPartyData(partyID: Int?) {
+        if(partyID != null){
+            db.collection("Party")
+                .whereEqualTo("party_id",partyID)
+                .get()
+                .addOnSuccessListener {
+                    for (document in it){
+                        Log.d("xxx",document.id+document.data)
+                        party = Party(document.data["is_active"] as Boolean,
+                            (document.data["party_id"] as Number).toInt(),
+                            document.data["party_name"].toString(),
+                            document.data["password"].toString(),
+                            (document.data["sum"] as Number).toDouble(),
+                            document.data["party_members"] as MutableList<String>,
+                            document.data["party_items"] as MutableList<Int>,
+                            document.data["item_count"] as MutableList<Int>,
+                            document.data["item_price"] as MutableList<Double>
+                            )
+                    }
+                    ready()
+                    getMembersData(party!!.party_members)
+                    getItemsData(party!!.party_items)
                 }
+                .addOnFailureListener {
+                    Toast.makeText(requireContext(),"Something went wrong. Try again later!",Toast.LENGTH_SHORT).show()
+                }
+        }
+    }
+
+    private fun getItemsData(partyItems: MutableList<Int>) {
+        var i = 0
+        db.collection("Item")
+            .whereIn("item_id", partyItems)
+            .get()
+            .addOnSuccessListener {
+                for (document in it) {
+                    if (party!!.item_count.size >= i) {
+                        items.add(
+                            Item(
+                                document.data["item_name"].toString(),
+                                (document.data["item_id"] as Number).toInt(),
+                                document.data["item_photo"].toString(),
+                                party!!.item_count[i],
+                                party!!.item_price[i]
+                            )
+                        )
+                    }
+                    ++i
+                }
+
+                Log.d("xxx", items.toString())
+                ready()
             }
+            .addOnFailureListener {
+                Toast.makeText(
+                    requireContext(),
+                    "Something went wrong. Try again later!",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+
+    }
+
+    private fun getMembersData(partyMembers: MutableList<String>) {
+        db.collection("User Data")
+            .whereIn("user_id",party!!.party_members)
+            .get()
+            .addOnSuccessListener {
+                Log.d("xxx","Success")
+                for (document in it) {
+                    if (document.data["photo"] != null && document.data["photo"].toString()
+                            .isNotEmpty()
+                    ) {
+                        members.add(
+                            Member(
+                                document.data["user_id"].toString(),
+                                document.data["user_name"].toString(),
+                                document.data["photo"].toString()
+                            )
+                        )
+                    }else{
+                        members.add(
+                            Member(
+                                document.data["user_id"].toString(),
+                                document.data["user_name"].toString(),
+                                ""
+                            )
+                        )
+                    }
+                }
+                Log.d("xxx",members.toString())
+                ready()
+            }
+            .addOnFailureListener {
+                Toast.makeText(requireContext(),"Something went wrong. Try again later!",Toast.LENGTH_SHORT).show()
+            }
+    }
+
+    private fun registerAdapters() {
+//        memberAdapter = MemberAdapter(listOf(User("laco.balogh@yahoo.com",
+//            "93wKhX3iB3cLKvP7D1do6K0JnYx1",
+//        "Laci",
+//        "https://firebasestorage.googleapis.com/v0/b/payment-sharing-app.appspot.com/o/userPhotos%2Flaco.balogh%40yahoo.com?alt=media&token=0a05eb48-7235-4c23-8e3e-da42908cb6dd")
+//        ),requireContext())
+        memberAdapter = MemberAdapter(members,requireContext())
+        rvMembers.adapter = memberAdapter
+        rvMembers.layoutManager = LinearLayoutManager(requireContext(),LinearLayoutManager.HORIZONTAL,false)
+
+//        itemAdapter = ItemAdapter(requireContext(), listOf(Item("Beer",
+//            1,
+//            "https://firebasestorage.googleapis.com/v0/b/payment-sharing-app.appspot.com/o/itemPhotos%2Fbeer.jpg?alt=media&token=a9887272-6666-422f-93d6-99945532b214",
+//            2,4.5),
+//            Item("Pálinka",
+//            2,
+//            "https://firebasestorage.googleapis.com/v0/b/payment-sharing-app.appspot.com/o/itemPhotos%2Fpalinka.jpg?alt=media&token=8acaab97-d773-429d-93fc-3f811d318546",
+//            3,12.5)))
+        itemAdapter = ItemAdapter(requireContext(),items)
+        rvItems.adapter = itemAdapter
+        rvItems.layoutManager = LinearLayoutManager(requireContext(),LinearLayoutManager.VERTICAL,false)
+    }
+
+    private fun registerListeners() {
+        btnSplitBills.setOnClickListener {
+            splitBills()
+        }
+        btnAddItem.setOnClickListener {
+            addItem()
+        }
+    }
+
+    private fun addItem() {
+        Log.d("xxx","Add item clicked")
+        val dialog = Dialog(requireContext(),R.style.DialogStyle)
+        dialog.setContentView(R.layout.item_type_dialog_layout)
+
+        dialog.window!!.setBackgroundDrawableResource(R.drawable.bg_dialog)
+
+        val btnDrink = dialog.findViewById<ImageView>(R.id.ivDrink)
+        Glide.with(requireContext())
+            .load(R.drawable.drinks)
+            .into(btnDrink)
+
+        val btnFood = dialog.findViewById<ImageView>(R.id.ivFood)
+        Glide.with(requireContext())
+            .load(R.drawable.food4)
+            .into(btnFood)
+
+        val btnOther = dialog.findViewById<ImageView>(R.id.ivOther)
+        Glide.with(requireContext())
+            .load(R.drawable.other)
+            .into(btnOther)
+
+        setDialogListeners(btnDrink,btnFood,btnOther,dialog)
+        dialog.show()
+    }
+
+    private fun setDialogListeners(
+        btnDrink: ImageView,
+        btnFood: ImageView,
+        btnOther: ImageView,
+        dialog:Dialog
+    ) {
+        btnDrink.setOnClickListener {
+            type = "drink"
+            dialog.dismiss()
+            itemList()
+        }
+        btnFood.setOnClickListener {
+            type = "food"
+            dialog.dismiss()
+            itemList()
+        }
+        btnOther.setOnClickListener {
+            type = "other"
+            dialog.dismiss()
+            itemList()
+        }
+    }
+
+    private fun itemList() {
+        val dialog = Dialog(requireContext(),R.style.DialogStyle)
+        dialog.setContentView(R.layout.item_list_dialog_layout)
+
+        dialog.window!!.setBackgroundDrawableResource(R.drawable.bg_dialog)
+
+        val rvItemList = dialog.findViewById<RecyclerView>(R.id.rvItemListDialog)
+        val btnNewItem = dialog.findViewById<Button>(R.id.btnNewItemDialog)
+
+        getItems()
+        specificItems.observe(viewLifecycleOwner){
+            rvItemList.adapter = ItemListAdapterDialog(requireContext(), specificItems.value!!)
+            rvItemList.layoutManager = LinearLayoutManager(requireContext(),LinearLayoutManager.VERTICAL,false)
+            Log.d("xxx",specificItems.value.toString())
+        }
+
+
+        dialog.show()
+    }
+
+    private fun getItems() {
+        val list = mutableListOf<SpecificItem>()
+        db.collection("Item")
+            .whereEqualTo("type",type)
+            .get()
+            .addOnSuccessListener {
+                for (document in it){
+                    list.add(
+                        SpecificItem(
+                            document.data["item_name"].toString(),
+                            (document.data["item_id"] as Number).toInt(),
+                            document.data["item_photo"].toString()
+                    )
+                    )
+                }
+                specificItems.value = list
+                Log.d("xxx",specificItems.value.toString())
+            }
+            .addOnFailureListener {
+                Toast.makeText(requireContext(),"Something went wrong. Try again later!",Toast.LENGTH_SHORT).show()
+            }
+    }
+
+
+    private fun splitBills() {
+        TODO("Not yet implemented")
+    }
+
+    private fun initializeView(view: View?) {
+        if(view != null){
+            btnSplitBills = view.findViewById(R.id.btnSplitBills)
+            rvItems = view.findViewById(R.id.rvItems)
+            rvMembers = view.findViewById(R.id.rvMembers)
+            btnAddItem = view.findViewById(R.id.btnAddItem)
+        }
+    }
+    private fun ready(){
+        if( isReady == 2){
+            registerAdapters()
+        }
+        else{
+            isReady++
+        }
     }
 }
