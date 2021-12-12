@@ -7,15 +7,22 @@ import android.view.ViewGroup
 import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.lifecycle.LifecycleOwner
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.example.software_engineering_project.R
+import com.example.software_engineering_project.Repository
+import com.example.software_engineering_project.SharedViewModel
 import com.example.software_engineering_project.utils.Item
+import com.google.firebase.firestore.FirebaseFirestore
 
 class ItemAdapter(
     private val context: Context,
     private val itemList: List<Item>,
-    private val listener:OnSubscribeClickListener
+    private val listener: OnSubscribeClickListener,
+    private val sharedViewModel: SharedViewModel,
+    private val viewLifecycleOwner: LifecycleOwner,
+    private val db: FirebaseFirestore
 ) :RecyclerView.Adapter<ItemAdapter.ViewHolder>(){
     interface OnSubscribeClickListener{
         fun onSubscribeClick(position: Int)
@@ -27,7 +34,18 @@ class ItemAdapter(
         private val ivItemPhoto = itemView.findViewById<ImageView>(R.id.ivItemImage)
         private val btnSubscribe = itemView.findViewById<ImageButton>(R.id.ibtnSubscribe)
 
+
+
         fun bind(position: Int) {
+            Repository.checkIfSubscribed(position,itemList,sharedViewModel,db)
+            sharedViewModel.isSubscribed.observe(viewLifecycleOwner){
+                if(sharedViewModel.isSubscribed.value!!){
+                    Glide.with(context)
+                        .load(R.drawable.ic_close)
+                        .into(btnSubscribe)
+                    sharedViewModel.isSubscribed.value = false
+                }
+            }
             tvName.text = itemList[position].item_name
             tvCount.text = "x${itemList[position].item_count.toString()}"
             tvTotalPrice.text = "${(itemList[position].item_count*itemList[position].item_price).toString()} RON"

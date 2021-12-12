@@ -5,6 +5,7 @@ import android.net.Uri
 import android.util.Log
 import android.widget.Toast
 import androidx.lifecycle.LifecycleOwner
+import com.example.software_engineering_project.adapters.ItemAdapter
 import com.example.software_engineering_project.utils.Item
 import com.example.software_engineering_project.utils.Member
 import com.example.software_engineering_project.utils.Party
@@ -244,6 +245,39 @@ object Repository {
             .addOnFailureListener {
                 Toast.makeText(context,"Item creation failed!",Toast.LENGTH_SHORT).show()
             }
+
+    }
+
+    fun checkIfSubscribed(
+        position: Int,
+        itemList: List<Item>,
+        sharedViewModel: SharedViewModel,
+        db: FirebaseFirestore
+    ) {
+        db.collection("Subscribers")
+            .whereEqualTo("party_id",sharedViewModel.selectedPartyID.value)
+            .whereEqualTo("party_item_index", itemList[position].index)
+            .get()
+            .addOnSuccessListener {
+                Log.d("xxx","subscribers collection: "+it.documents.toString())
+                if (it.documents.size ==0){
+                    sharedViewModel.isSubscribed.value = false
+                }else {
+                    val subscribedUsers =
+                        it.documents[0].data!!["subscribed_mebers_index"] as List<String>
+                    if(subscribedUsers.contains(MyApplication.UID)){
+                        sharedViewModel.isSubscribed.value = true
+                    }
+                }
+            }
+    }
+
+    fun subscribe(
+        context: Context,
+        sharedViewModel: SharedViewModel,
+        db: FirebaseFirestore,
+        itemAdapter: ItemAdapter
+    ) {
 
     }
 }
