@@ -7,10 +7,7 @@ import android.widget.Toast
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.MutableLiveData
 import com.example.software_engineering_project.adapters.ItemAdapter
-import com.example.software_engineering_project.utils.Item
-import com.example.software_engineering_project.utils.Member
-import com.example.software_engineering_project.utils.Party
-import com.example.software_engineering_project.utils.SpecificItem
+import com.example.software_engineering_project.utils.*
 import com.google.android.gms.tasks.Tasks.await
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
@@ -355,7 +352,24 @@ object Repository {
     }
 
     fun createNewParty(partyName: String, db: FirebaseFirestore, context: Context, sharedViewModel: SharedViewModel) {
-        Log.d("xxx", "Creating new party with id=${sharedViewModel.newPartyId.value}")
+        Log.d("xxx", "Creating new party with id=${sharedViewModel.newPartyId.value}, name=$partyName")
+        db.collection("Party").document(partyName + System.currentTimeMillis())
+            .set(mapOf(
+                "party_id" to sharedViewModel.newPartyId.value,
+                "party_name" to partyName,
+                "password" to PasswordGenerator().generatePassword(true, true, true, false, 8),
+                "is_active" to true,
+                "party_members" to arrayListOf<String>("${MyApplication.UID}"),
+                "sum" to 0,
+                "party_items" to arrayListOf<Int>(),
+                "item_count" to arrayListOf<Int>(),
+                "item_price" to arrayListOf<Int>()
+            ))
+            .addOnSuccessListener {
+                Toast.makeText(context,"Party successfully created.",Toast.LENGTH_SHORT).show()
+                sharedViewModel.selectedPartyID.value = sharedViewModel.newPartyId.value
+                sharedViewModel.partyCreationWasSuccessful.value = true
+            }
     }
 
     fun getNewPartyId(db: FirebaseFirestore, sharedViewModel: SharedViewModel) {

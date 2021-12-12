@@ -45,6 +45,7 @@ class NewPartyFragment : Fragment() {
             setOnClickListeners(this)
         }
         sharedViewModel.joinWasSuccessful.value = false
+        sharedViewModel.partyCreationWasSuccessful.value = false
         return view
     }
 
@@ -72,6 +73,11 @@ class NewPartyFragment : Fragment() {
                 sharedViewModel.newPartyId.observe(viewLifecycleOwner) { newPartyId ->
                     if (newPartyId > -1) {
                         Repository.createNewParty(etPartyName.text.toString(), Firebase.firestore, view.context, sharedViewModel)
+                        sharedViewModel.partyCreationWasSuccessful.observe(viewLifecycleOwner) { success ->
+                            if (success) {
+                                findNavController().navigate(R.id.action_newPartyFragment_to_partyFragment)
+                            }
+                        }
                     }
                 }
                 Repository.getNewPartyId(Firebase.firestore, sharedViewModel)
