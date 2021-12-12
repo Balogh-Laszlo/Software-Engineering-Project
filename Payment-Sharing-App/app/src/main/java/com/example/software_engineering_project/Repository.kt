@@ -1,6 +1,7 @@
 package com.example.software_engineering_project
 
 import android.content.Context
+import android.net.Uri
 import android.util.Log
 import android.widget.Toast
 import androidx.lifecycle.LifecycleOwner
@@ -9,6 +10,7 @@ import com.example.software_engineering_project.utils.Member
 import com.example.software_engineering_project.utils.Party
 import com.example.software_engineering_project.utils.SpecificItem
 import com.google.firebase.firestore.FirebaseFirestore
+import java.lang.Thread.sleep
 
 
 object Repository {
@@ -159,11 +161,88 @@ object Repository {
     private fun ready(sharedViewModel: SharedViewModel){
         sharedViewModel.isReady.value = false
         if( isReady == 2){
+            sleep(100)
             sharedViewModel.isReady.value = true
             isReady = 0
         }
         else{
             isReady++
         }
+    }
+
+    fun addItemToFirebase(
+        context: Context,
+        selectedItemFinal: Item,
+        db: FirebaseFirestore,
+        party: Party,
+        sharedViewModel: SharedViewModel
+    ){
+        val count = party.item_count
+        count.add(selectedItemFinal.item_count)
+        val price = party.item_price
+        price.add(selectedItemFinal.item_price)
+        val id = party.party_items
+        id.add(selectedItemFinal.item_id)
+        val sum = party.sum + selectedItemFinal.item_price
+
+        db.collection("Party")
+            .whereEqualTo("party_id",sharedViewModel.selectedPartyID.value)
+            .get()
+            .addOnSuccessListener {
+                db.collection("Party").document(it.documents[0].id)
+                    .update(
+                        mapOf(
+                            "item_count" to count,
+                            "item_price" to price,
+                            "party_items" to id,
+                            "sum" to sum
+                        )
+
+                    )
+                    .addOnSuccessListener {
+                        Toast.makeText(context,"You successfully added an item to the party",Toast.LENGTH_SHORT).show()
+                    }
+                    .addOnFailureListener {
+                        Toast.makeText(context,"Something went wrong. Try again later!",Toast.LENGTH_SHORT).show()
+                    }
+            }
+            .addOnFailureListener {
+                Toast.makeText(context,"Something went wrong. Try again later!",Toast.LENGTH_SHORT).show()
+            }
+    }
+
+
+    fun saveItemDataToFirestore(
+        uri: Uri,
+        context: Context,
+        db: FirebaseFirestore,
+        itemName: String,
+        type: String,
+        sharedViewModel: SharedViewModel
+    ) {
+        var itemId = 0
+        db.collection("Item").get()
+            .addOnSuccessListener {
+                itemId = (it.documents[it.documents.size-1].data!!["item_id"] as Number).toInt()
+                itemId++
+                db.collection("Item").document(itemName+System.currentTimeMillis().toString())
+                    .set(mapOf(
+                        "item_name" to itemName,
+                        "item_id" to itemId,
+                        "item_photo" to uri.toString(),
+                        "type" to type
+                    ))
+                    .addOnSuccessListener {
+                        Toast.makeText(context,"Item creation successful!",Toast.LENGTH_SHORT).show()
+                        sharedViewModel.itemCreationIsReady.value = true
+                    }
+                    .addOnFailureListener {
+                        Toast.makeText(context,"Item creation failed!",Toast.LENGTH_SHORT).show()
+                    }
+            }
+            .addOnFailureListener {
+                Toast.makeText(context,"Item creation failed!",Toast.LENGTH_SHORT).show()
+            }
+
     }
 }

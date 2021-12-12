@@ -14,4 +14,5 @@ class SharedViewModel:ViewModel() {
     val partyMembers = MutableLiveData<MutableList<Member>>()
     val items = MutableLiveData<MutableList<SpecificItem>>()
     val isReady = MutableLiveData<Boolean>(false)
+    val itemCreationIsReady = MutableLiveData<Boolean>(false)
 }

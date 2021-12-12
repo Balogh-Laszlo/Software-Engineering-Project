@@ -1,6 +1,7 @@
 package com.example.software_engineering_project.fragments
 
 import android.app.Dialog
+import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import androidx.fragment.app.Fragment
@@ -9,7 +10,6 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.*
 import androidx.fragment.app.activityViewModels
-import androidx.lifecycle.MutableLiveData
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
@@ -17,11 +17,13 @@ import com.example.software_engineering_project.adapters.ItemAdapter
 import com.example.software_engineering_project.R
 import com.example.software_engineering_project.Repository
 import com.example.software_engineering_project.SharedViewModel
+import com.example.software_engineering_project.activityResult.PickPhoto
 import com.example.software_engineering_project.adapters.ItemListAdapterDialog
 import com.example.software_engineering_project.adapters.MemberAdapter
 import com.example.software_engineering_project.utils.*
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
+import com.google.firebase.storage.FirebaseStorage
 
 
 class PartyFragment : Fragment(), ItemListAdapterDialog.OnItemClickListener {
@@ -31,21 +33,23 @@ class PartyFragment : Fragment(), ItemListAdapterDialog.OnItemClickListener {
     private lateinit var memberAdapter: MemberAdapter
     private lateinit var itemAdapter: ItemAdapter
     private lateinit var btnAddItem: ImageButton
+    private lateinit var tvSum: TextView
+    private lateinit var ivPhoto: ImageView
+
+    private var itemPhotoUri: Uri? = null
 
     private val sharedViewModel:SharedViewModel by activityViewModels()
     private val db = Firebase.firestore
-    private var party: Party? = null
-    private var items = mutableListOf<Item>()
-    private var members = mutableListOf<Member>()
+    private val storage = FirebaseStorage.getInstance()
 
-    private var isReady = 0
 
     private var type =""
-    private val specificItems = MutableLiveData<MutableList<SpecificItem>>()
 
     private lateinit var dialog: Dialog
     private lateinit var selectedItemByDialog: SpecificItem
     private lateinit var selectedItemFinal: Item
+
+    private var itemName: String =""
 
 
 
@@ -66,6 +70,7 @@ class PartyFragment : Fragment(), ItemListAdapterDialog.OnItemClickListener {
         sharedViewModel.isReady.observe(viewLifecycleOwner){
             if (it){
                 registerAdapters()
+                tvSum.text = sharedViewModel.party.value!!.sum.toString()+" RON"
             }
         }
 
@@ -78,9 +83,12 @@ class PartyFragment : Fragment(), ItemListAdapterDialog.OnItemClickListener {
 //        "Laci",
 //        "https://firebasestorage.googleapis.com/v0/b/payment-sharing-app.appspot.com/o/userPhotos%2Flaco.balogh%40yahoo.com?alt=media&token=0a05eb48-7235-4c23-8e3e-da42908cb6dd")
 //        ),requireContext())
-        memberAdapter = MemberAdapter(sharedViewModel.partyMembers.value!!,requireContext())
-        rvMembers.adapter = memberAdapter
-        rvMembers.layoutManager = LinearLayoutManager(requireContext(),LinearLayoutManager.HORIZONTAL,false)
+        if(sharedViewModel.partyMembers.value != null) {
+            memberAdapter = MemberAdapter(sharedViewModel.partyMembers.value!!, requireContext())
+            rvMembers.adapter = memberAdapter
+            rvMembers.layoutManager =
+                LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false)
+        }
 
 //        itemAdapter = ItemAdapter(requireContext(), listOf(Item("Beer",
 //            1,
@@ -167,9 +175,62 @@ class PartyFragment : Fragment(), ItemListAdapterDialog.OnItemClickListener {
             rvItemList.adapter = ItemListAdapterDialog(requireContext(), sharedViewModel.items.value!!,this)
             rvItemList.layoutManager = LinearLayoutManager(requireContext(),LinearLayoutManager.VERTICAL,false)
         }
+        btnNewItem.setOnClickListener {
+            createNewItem()
+        }
         dialog.show()
     }
 
+    private fun createNewItem() {
+        val createDialog = Dialog(requireContext(),R.style.DialogStyle)
+        createDialog.setContentView(R.layout.create_new_item_dialog_layout)
+        createDialog.window!!.setBackgroundDrawableResource(R.drawable.bg_dialog)
+        val etItemName = createDialog.findViewById<EditText>(R.id.etItemNameDialog)
+        ivPhoto = createDialog.findViewById<ImageView>(R.id.ivNewItemPhoto)
+        val btnCreate = createDialog.findViewById<Button>(R.id.btnCreateNewItem)
+        ivPhoto.setOnClickListener {
+            getPhoto.launch(0)
+        }
+        btnCreate.setOnClickListener {
+            if(etItemName.text.isNotEmpty()) {
+                itemName = etItemName.text.toString()
+                uploadImage()
+                createDialog.dismiss()
+                sharedViewModel.itemCreationIsReady.observe(viewLifecycleOwner){
+                    if(sharedViewModel.itemCreationIsReady.value!!) {
+                        itemList()
+                        sharedViewModel.itemCreationIsReady.value = false
+                    }
+                }
+
+            }
+        }
+
+        createDialog.show()
+
+    }
+    private fun uploadImage() {
+        if (itemPhotoUri != null) {
+            val path = storage.reference.child("itemPhotos").child(itemName+System.currentTimeMillis().toString())
+            path.putFile(itemPhotoUri!!).addOnSuccessListener {
+                Toast.makeText(requireContext(), "Photo uploaded", Toast.LENGTH_SHORT).show()
+                path.downloadUrl.addOnSuccessListener { uri ->
+                    Repository.saveItemDataToFirestore(uri,requireContext(),db,itemName,type,sharedViewModel)
+                }
+            }
+        }
+    }
+    private val getPhoto = registerForActivityResult(PickPhoto()) { selectedUri ->
+        if (selectedUri != null) {
+            Glide
+                .with(requireContext())
+                .load(selectedUri)
+                .circleCrop()
+                .into(ivPhoto)
+            itemPhotoUri = selectedUri
+            }
+
+        }
     private fun splitBills() {
         TODO("Not yet implemented")
     }
@@ -180,6 +241,7 @@ class PartyFragment : Fragment(), ItemListAdapterDialog.OnItemClickListener {
             rvItems = view.findViewById(R.id.rvItems)
             rvMembers = view.findViewById(R.id.rvMembers)
             btnAddItem = view.findViewById(R.id.btnAddItem)
+            tvSum = view.findViewById(R.id.tvTotalAmount)
         }
     }
 
@@ -199,7 +261,49 @@ class PartyFragment : Fragment(), ItemListAdapterDialog.OnItemClickListener {
         btnOk.setOnClickListener {
             countAndPriceDialog.dismiss()
             selectedItemFinal = Item(selectedItemByDialog.item_name,selectedItemByDialog.item_id,selectedItemByDialog.item_photo,tvCount.text.toString().toInt(),tvPrice.text.toString().toDouble())
+            Repository.addItemToFirebase(requireContext(),selectedItemFinal,db,
+                sharedViewModel.party.value!!,sharedViewModel)
         }
+        setCountAndPriceListeners(countAndPriceDialog)
 
+    }
+
+    private fun setCountAndPriceListeners(dialog: Dialog) {
+        val btnPlusPrice = dialog.findViewById<ImageButton>(R.id.btnPlusPrice)
+        val btnMinusPrice = dialog.findViewById<ImageButton>(R.id.btnMinusPrice)
+        val btnPlusCount = dialog.findViewById<ImageButton>(R.id.btnPlusCount)
+        val btnMinusCount = dialog.findViewById<ImageButton>(R.id.btnMinusCount)
+        val tvPrice = dialog.findViewById<TextView>(R.id.tvPriceDialog)
+        val tvCount = dialog.findViewById<TextView>(R.id.tvCountDialog)
+        if(tvPrice.text == "1"){
+            btnMinusPrice.isEnabled = false
+        }
+        if(tvCount.text == "1"){
+            btnMinusCount.isEnabled = false
+        }
+        btnPlusPrice.setOnClickListener {
+            if(tvPrice.text == "1" || tvPrice.text.toString().toInt() == 1 ){
+                btnMinusPrice.isEnabled = true
+            }
+            tvPrice.text = (tvPrice.text.toString().toInt() + 1).toString()
+        }
+        btnMinusPrice.setOnClickListener {
+            if(tvPrice.text == "2" || tvPrice.text.toString().toInt() == 2){
+                btnMinusPrice.isEnabled = false
+            }
+            tvPrice.text = (tvPrice.text.toString().toInt() - 1).toString()
+        }
+        btnPlusCount.setOnClickListener {
+            if(tvCount.text == "1" || tvCount.text.toString().toInt() == 1 ){
+                btnMinusCount.isEnabled = true
+            }
+            tvCount.text = (tvCount.text.toString().toInt() + 1).toString()
+        }
+        btnMinusCount.setOnClickListener {
+            if(tvCount.text == "2" || tvCount.text.toString().toInt() == 2){
+                btnMinusCount.isEnabled = false
+            }
+            tvCount.text = (tvCount.text.toString().toInt() - 1).toString()
+        }
     }
 }
