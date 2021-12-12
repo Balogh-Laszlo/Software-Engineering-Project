@@ -8,8 +8,11 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.Toast
+import androidx.fragment.app.activityViewModels
+import androidx.navigation.fragment.findNavController
 import com.example.software_engineering_project.R
 import com.example.software_engineering_project.Repository
+import com.example.software_engineering_project.SharedViewModel
 import com.google.android.material.textfield.TextInputEditText
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
@@ -25,6 +28,7 @@ class NewPartyFragment : Fragment() {
     private lateinit var btnJoin: Button
     private lateinit var etPartyName: TextInputEditText
     private lateinit var btnCreate: Button
+    private val sharedViewModel: SharedViewModel by activityViewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -40,6 +44,7 @@ class NewPartyFragment : Fragment() {
             initializeViews(this)
             setOnClickListeners(this)
         }
+        sharedViewModel.joinWasSuccessful.value = false
         return view
     }
 
@@ -50,7 +55,12 @@ class NewPartyFragment : Fragment() {
                 Toast.makeText(view.context, "No code given.", Toast.LENGTH_SHORT).show()
             } else {
                 // JOIN PARTY
-                Repository.joinParty(etCode.text.toString(), Firebase.firestore, view.context)
+                Repository.joinParty(etCode.text.toString(), Firebase.firestore, view.context, sharedViewModel)
+                sharedViewModel.joinWasSuccessful.observe(viewLifecycleOwner) { joinWasSuccessful ->
+                    if (joinWasSuccessful) {
+                        findNavController().navigate(R.id.action_newPartyFragment_to_partyFragment)
+                    }
+                }
             }
         }
         btnCreate.setOnClickListener {

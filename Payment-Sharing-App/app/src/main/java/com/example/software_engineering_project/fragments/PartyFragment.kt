@@ -66,7 +66,6 @@ class PartyFragment : Fragment(), ItemListAdapterDialog.OnItemClickListener,
         val view = inflater.inflate(R.layout.fragment_party, container, false)
         initializeView(view)
         registerListeners()
-        sharedViewModel.selectedPartyID.value = 1
         Repository.trackPartyData(requireContext(),db,sharedViewModel,viewLifecycleOwner)
         sharedViewModel.isReady.observe(viewLifecycleOwner){
             if (it){

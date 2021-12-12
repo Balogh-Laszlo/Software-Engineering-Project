@@ -312,7 +312,7 @@ object Repository {
 
     }
 
-    fun joinParty(password: String, db: FirebaseFirestore, context: Context) {
+    fun joinParty(password: String, db: FirebaseFirestore, context: Context, sharedViewModel: SharedViewModel) {
         db.collection("Party")
             .whereEqualTo("password", password)
             .get()
@@ -320,9 +320,12 @@ object Repository {
                 if (it.documents.size > 0) {
                     Log.d("xxx", "party members: ${it.documents[0]["party_members"]}")
                     val members = it.documents[0]["party_members"] as ArrayList<String>
+                    val partyId = (it.documents[0]["party_id"] as Number).toInt()
                     if (members.contains(MyApplication.UID)) {
                         // already member
                         Toast.makeText(context,"You are already a member of this party.",Toast.LENGTH_LONG).show()
+                        sharedViewModel.selectedPartyID.value = partyId
+                        sharedViewModel.joinWasSuccessful.value = true
                     } else {
                         // add as member
                         val docId = it.documents[0].id
@@ -330,6 +333,8 @@ object Repository {
                         partyRef.update("party_members", FieldValue.arrayUnion(MyApplication.UID))
                             .addOnCompleteListener {
                                 Toast.makeText(context,"Joined successfully.",Toast.LENGTH_SHORT).show()
+                                sharedViewModel.selectedPartyID.value = partyId
+                                sharedViewModel.joinWasSuccessful.value = true
                             }
                             .addOnFailureListener {
                                 Toast.makeText(context,"Failed to join party.",Toast.LENGTH_SHORT).show()
