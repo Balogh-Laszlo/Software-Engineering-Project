@@ -311,4 +311,36 @@ object Repository {
             }
 
     }
+
+    fun joinParty(password: String, db: FirebaseFirestore, context: Context) {
+        db.collection("Party")
+            .whereEqualTo("password", password)
+            .get()
+            .addOnSuccessListener {
+                if (it.documents.size > 0) {
+                    Log.d("xxx", "party members: ${it.documents[0]["party_members"]}")
+                    val members = it.documents[0]["party_members"] as ArrayList<String>
+                    if (members.contains(MyApplication.UID)) {
+                        // already member
+                        Toast.makeText(context,"You are already a member of this party.",Toast.LENGTH_LONG).show()
+                    } else {
+                        // add as member
+                        val docId = it.documents[0].id
+                        val partyRef = db.collection("Party").document(docId)
+                        partyRef.update("party_members", FieldValue.arrayUnion(MyApplication.UID))
+                            .addOnCompleteListener {
+                                Toast.makeText(context,"Joined successfully.",Toast.LENGTH_SHORT).show()
+                            }
+                            .addOnFailureListener {
+                                Toast.makeText(context,"Failed to join party.",Toast.LENGTH_SHORT).show()
+                            }
+                    }
+                } else {
+                    Toast.makeText(context,"Password is not associated with any party.",Toast.LENGTH_SHORT).show()
+                }
+            }
+            .addOnFailureListener {
+                Toast.makeText(context,"Something went wrong.",Toast.LENGTH_SHORT).show()
+            }
+    }
 }

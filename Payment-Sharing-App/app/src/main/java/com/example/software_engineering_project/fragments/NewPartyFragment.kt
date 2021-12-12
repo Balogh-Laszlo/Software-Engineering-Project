@@ -9,7 +9,10 @@ import android.view.ViewGroup
 import android.widget.Button
 import android.widget.Toast
 import com.example.software_engineering_project.R
+import com.example.software_engineering_project.Repository
 import com.google.android.material.textfield.TextInputEditText
+import com.google.firebase.firestore.ktx.firestore
+import com.google.firebase.ktx.Firebase
 
 /**
  * A simple [Fragment] subclass.
@@ -47,6 +50,7 @@ class NewPartyFragment : Fragment() {
                 Toast.makeText(view.context, "No code given.", Toast.LENGTH_SHORT).show()
             } else {
                 // JOIN PARTY
+                Repository.joinParty(etCode.text.toString(), Firebase.firestore, view.context)
             }
         }
         btnCreate.setOnClickListener {
