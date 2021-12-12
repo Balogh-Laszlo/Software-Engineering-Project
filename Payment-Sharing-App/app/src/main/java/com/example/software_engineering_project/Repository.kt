@@ -10,6 +10,7 @@ import com.example.software_engineering_project.utils.Item
 import com.example.software_engineering_project.utils.Member
 import com.example.software_engineering_project.utils.Party
 import com.example.software_engineering_project.utils.SpecificItem
+import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import java.lang.Thread.sleep
 
@@ -260,15 +261,18 @@ object Repository {
             .get()
             .addOnSuccessListener {
                 Log.d("xxx","subscribers collection: "+it.documents.toString())
-                if (it.documents.size ==0){
-                    sharedViewModel.isSubscribed.value = false
+                if (it.documents.size < 1){
+                    sharedViewModel.isSubscribed.value!![position] = false
                 }else {
                     val subscribedUsers =
-                        it.documents[0].data!!["subscribed_mebers_index"] as List<String>
+                        it.documents[0].data!!["subscribed_members_index"] as List<String>
                     if(subscribedUsers.contains(MyApplication.UID)){
-                        sharedViewModel.isSubscribed.value = true
+                        sharedViewModel.isSubscribed.value!![position] = true
                     }
                 }
+            }
+            .addOnFailureListener {
+                Log.d("xxx", "checkIfSubscribed error$it")
             }
     }
 
@@ -276,8 +280,35 @@ object Repository {
         context: Context,
         sharedViewModel: SharedViewModel,
         db: FirebaseFirestore,
-        itemAdapter: ItemAdapter
+        itemAdapter: ItemAdapter,
+        position: Int
     ) {
+        db.collection("Subscribers")
+            .whereEqualTo("party_id", sharedViewModel.selectedPartyID.value)
+            .whereEqualTo("party_item_index", sharedViewModel.partyItems.value!![position].index)
+            .get()
+            .addOnSuccessListener {
+                if(it.documents.size>0){
+                    db.collection("Subscribers").document(it.documents[0].id)
+                        .update("subscribed_members_index", FieldValue.arrayUnion(MyApplication.UID))
+                        .addOnSuccessListener {
+                            Toast.makeText(context,"You successfully subscribed!",Toast.LENGTH_SHORT).show()
+                            itemAdapter.notifyDataSetChanged()
+                        }
+                }
+                else{
+                    db.collection("Subscribers").document(sharedViewModel.party.value!!.party_name+System.currentTimeMillis())
+                        .set(mapOf(
+                            "party_id" to sharedViewModel.party.value!!.party_id,
+                            "party_item_index" to sharedViewModel.partyItems.value!![position].index,
+                            "subscribed_members_index" to listOf<String>(MyApplication.UID)
+                        ))
+                        .addOnSuccessListener {
+                            Toast.makeText(context,"You successfully subscribed!",Toast.LENGTH_SHORT).show()
+                            itemAdapter.notifyDataSetChanged()
+                        }
+                }
+            }
 
     }
 }

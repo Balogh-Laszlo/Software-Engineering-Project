@@ -39,11 +39,11 @@ class ItemAdapter(
         fun bind(position: Int) {
             Repository.checkIfSubscribed(position,itemList,sharedViewModel,db)
             sharedViewModel.isSubscribed.observe(viewLifecycleOwner){
-                if(sharedViewModel.isSubscribed.value!!){
+                if(sharedViewModel.isSubscribed.value!![position]){
                     Glide.with(context)
                         .load(R.drawable.ic_close)
                         .into(btnSubscribe)
-                    sharedViewModel.isSubscribed.value = false
+                    sharedViewModel.isSubscribed.value!![position] = false
                 }
             }
             tvName.text = itemList[position].item_name
@@ -69,6 +69,10 @@ class ItemAdapter(
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val itemView = LayoutInflater.from(parent.context).inflate(R.layout.single_item_layout,parent,false)
+        itemList.forEach {
+            sharedViewModel.isSubscribed.value!!.add(false)
+        }
+
         return ViewHolder(itemView)
     }
 

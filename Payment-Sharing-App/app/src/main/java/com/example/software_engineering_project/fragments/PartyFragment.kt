@@ -310,6 +310,6 @@ class PartyFragment : Fragment(), ItemListAdapterDialog.OnItemClickListener,
 
     override fun onSubscribeClick(position: Int) {
         Log.d("xxx","Subscribe"+sharedViewModel.partyItems.value!![position].toString())
-        Repository.subscribe(requireContext(),sharedViewModel,db,itemAdapter)
+        Repository.subscribe(requireContext(),sharedViewModel,db,itemAdapter,position)
     }
 }
