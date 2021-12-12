@@ -5,19 +5,24 @@ import android.net.Uri
 import android.util.Log
 import android.widget.Toast
 import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.MutableLiveData
 import com.example.software_engineering_project.adapters.ItemAdapter
 import com.example.software_engineering_project.utils.Item
 import com.example.software_engineering_project.utils.Member
 import com.example.software_engineering_project.utils.Party
 import com.example.software_engineering_project.utils.SpecificItem
+import com.google.android.gms.tasks.Tasks.await
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.QuerySnapshot
 import java.lang.Thread.sleep
 
 
 object Repository {
-    private lateinit var party:Party
+
+    private lateinit var party: Party
     private var isReady = 0
+
     private fun getMembersData(
         partyMembers: MutableList<String>,
         context: Context,
@@ -346,6 +351,26 @@ object Repository {
             }
             .addOnFailureListener {
                 Toast.makeText(context,"Something went wrong.",Toast.LENGTH_SHORT).show()
+            }
+    }
+
+    fun createNewParty(partyName: String, db: FirebaseFirestore, context: Context, sharedViewModel: SharedViewModel) {
+        Log.d("xxx", "Creating new party with id=${sharedViewModel.newPartyId.value}")
+    }
+
+    fun getNewPartyId(db: FirebaseFirestore, sharedViewModel: SharedViewModel) {
+        db.collection("Party").get()
+            .addOnSuccessListener {
+                if (it.documents.size > 0) {
+                    var maxId: Int = -1
+                    for (doc in it.documents) {
+                        val currId: Int = (doc["party_id"] as Number).toInt()
+                        if (currId > maxId) {
+                            maxId = currId
+                        }
+                    }
+                    sharedViewModel.newPartyId.value = maxId + 1
+                }
             }
     }
 }

@@ -17,4 +17,5 @@ class SharedViewModel:ViewModel() {
     val itemCreationIsReady = MutableLiveData<Boolean>(false)
     val isSubscribed = MutableLiveData(mutableListOf<Boolean>())
     val joinWasSuccessful = MutableLiveData<Boolean>(false)
+    val newPartyId = MutableLiveData<Int>(-1)
 }

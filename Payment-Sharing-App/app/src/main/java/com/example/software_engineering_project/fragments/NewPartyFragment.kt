@@ -69,6 +69,12 @@ class NewPartyFragment : Fragment() {
                 Toast.makeText(view.context, "No party name given.", Toast.LENGTH_SHORT).show()
             } else {
                 // CREATE PARTY
+                sharedViewModel.newPartyId.observe(viewLifecycleOwner) { newPartyId ->
+                    if (newPartyId > -1) {
+                        Repository.createNewParty(etPartyName.text.toString(), Firebase.firestore, view.context, sharedViewModel)
+                    }
+                }
+                Repository.getNewPartyId(Firebase.firestore, sharedViewModel)
             }
         }
     }
