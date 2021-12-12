@@ -1,49 +1,56 @@
 package com.example.software_engineering_project.fragments
 
 import android.app.Dialog
+import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
-import android.widget.ImageButton
-import android.widget.ImageView
-import android.widget.Toast
+import android.widget.*
 import androidx.fragment.app.activityViewModels
-import androidx.lifecycle.MutableLiveData
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.example.software_engineering_project.adapters.ItemAdapter
 import com.example.software_engineering_project.R
+import com.example.software_engineering_project.Repository
 import com.example.software_engineering_project.SharedViewModel
+import com.example.software_engineering_project.activityResult.PickPhoto
 import com.example.software_engineering_project.adapters.ItemListAdapterDialog
 import com.example.software_engineering_project.adapters.MemberAdapter
 import com.example.software_engineering_project.utils.*
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
+import com.google.firebase.storage.FirebaseStorage
 
 
-class PartyFragment : Fragment() {
+class PartyFragment : Fragment(), ItemListAdapterDialog.OnItemClickListener,
+    ItemAdapter.OnSubscribeClickListener {
     private lateinit var btnSplitBills: Button
     private lateinit var rvMembers:RecyclerView
     private lateinit var rvItems:RecyclerView
     private lateinit var memberAdapter: MemberAdapter
     private lateinit var itemAdapter: ItemAdapter
     private lateinit var btnAddItem: ImageButton
+    private lateinit var tvSum: TextView
+    private lateinit var ivPhoto: ImageView
+
+    private var itemPhotoUri: Uri? = null
 
     private val sharedViewModel:SharedViewModel by activityViewModels()
     private val db = Firebase.firestore
-    private var party: Party? = null
-    private val items = mutableListOf<Item>()
-    private val members = mutableListOf<Member>()
+    private val storage = FirebaseStorage.getInstance()
 
-    private var isReady = 0
 
     private var type =""
-    private val specificItems = MutableLiveData<MutableList<SpecificItem>>()
+
+    private lateinit var dialog: Dialog
+    private lateinit var selectedItemByDialog: SpecificItem
+    private lateinit var selectedItemFinal: Item
+
+    private var itemName: String =""
 
 
 
@@ -59,110 +66,16 @@ class PartyFragment : Fragment() {
         val view = inflater.inflate(R.layout.fragment_party, container, false)
         initializeView(view)
         registerListeners()
-        sharedViewModel.selectedPartyID.observe(viewLifecycleOwner,{
-            getPartyData(it)
-
-        })
+        sharedViewModel.selectedPartyID.value = 1
+        Repository.trackPartyData(requireContext(),db,sharedViewModel,viewLifecycleOwner)
+        sharedViewModel.isReady.observe(viewLifecycleOwner){
+            if (it){
+                registerAdapters()
+                tvSum.text = sharedViewModel.party.value!!.sum.toString()+" RON"
+            }
+        }
 
         return view
-    }
-
-    private fun getPartyData(partyID: Int?) {
-        if(partyID != null){
-            db.collection("Party")
-                .whereEqualTo("party_id",partyID)
-                .get()
-                .addOnSuccessListener {
-                    for (document in it){
-                        Log.d("xxx",document.id+document.data)
-                        party = Party(document.data["is_active"] as Boolean,
-                            (document.data["party_id"] as Number).toInt(),
-                            document.data["party_name"].toString(),
-                            document.data["password"].toString(),
-                            (document.data["sum"] as Number).toDouble(),
-                            document.data["party_members"] as MutableList<String>,
-                            document.data["party_items"] as MutableList<Int>,
-                            document.data["item_count"] as MutableList<Int>,
-                            document.data["item_price"] as MutableList<Double>
-                            )
-                    }
-                    ready()
-                    getMembersData(party!!.party_members)
-                    getItemsData(party!!.party_items)
-                }
-                .addOnFailureListener {
-                    Toast.makeText(requireContext(),"Something went wrong. Try again later!",Toast.LENGTH_SHORT).show()
-                }
-        }
-    }
-
-    private fun getItemsData(partyItems: MutableList<Int>) {
-        var i = 0
-        db.collection("Item")
-            .whereIn("item_id", partyItems)
-            .get()
-            .addOnSuccessListener {
-                for (document in it) {
-                    if (party!!.item_count.size >= i) {
-                        items.add(
-                            Item(
-                                document.data["item_name"].toString(),
-                                (document.data["item_id"] as Number).toInt(),
-                                document.data["item_photo"].toString(),
-                                party!!.item_count[i],
-                                party!!.item_price[i]
-                            )
-                        )
-                    }
-                    ++i
-                }
-
-                Log.d("xxx", items.toString())
-                ready()
-            }
-            .addOnFailureListener {
-                Toast.makeText(
-                    requireContext(),
-                    "Something went wrong. Try again later!",
-                    Toast.LENGTH_SHORT
-                ).show()
-            }
-
-    }
-
-    private fun getMembersData(partyMembers: MutableList<String>) {
-        db.collection("User Data")
-            .whereIn("user_id",party!!.party_members)
-            .get()
-            .addOnSuccessListener {
-                Log.d("xxx","Success")
-                for (document in it) {
-                    if (document.data["photo"] != null && document.data["photo"].toString()
-                            .isNotEmpty()
-                    ) {
-                        members.add(
-                            Member(
-                                document.data["user_id"].toString(),
-                                document.data["user_name"].toString(),
-                                document.data["photo"].toString()
-                            )
-                        )
-                    }else{
-                        members.add(
-                            Member(
-                                document.data["user_id"].toString(),
-                                document.data["user_name"].toString(),
-                                ""
-                            )
-                        )
-                    }
-                }
-                Log.d("xxx",members.toString())
-                ready()
-            }
-            .addOnFailureListener {
-                Toast.makeText(requireContext(),"Something went wrong. Try again later!",Toast.LENGTH_SHORT).show()
-            }
     }
 
     private fun registerAdapters() {
@@ -171,9 +84,12 @@ class PartyFragment : Fragment() {
 //        "Laci",
 //        "https://firebasestorage.googleapis.com/v0/b/payment-sharing-app.appspot.com/o/userPhotos%2Flaco.balogh%40yahoo.com?alt=media&token=0a05eb48-7235-4c23-8e3e-da42908cb6dd")
 //        ),requireContext())
-        memberAdapter = MemberAdapter(members,requireContext())
-        rvMembers.adapter = memberAdapter
-        rvMembers.layoutManager = LinearLayoutManager(requireContext(),LinearLayoutManager.HORIZONTAL,false)
+        if(sharedViewModel.partyMembers.value != null) {
+            memberAdapter = MemberAdapter(sharedViewModel.partyMembers.value!!, requireContext())
+            rvMembers.adapter = memberAdapter
+            rvMembers.layoutManager =
+                LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false)
+        }
 
 //        itemAdapter = ItemAdapter(requireContext(), listOf(Item("Beer",
 //            1,
@@ -183,7 +99,7 @@ class PartyFragment : Fragment() {
 //            2,
 //            "https://firebasestorage.googleapis.com/v0/b/payment-sharing-app.appspot.com/o/itemPhotos%2Fpalinka.jpg?alt=media&token=8acaab97-d773-429d-93fc-3f811d318546",
 //            3,12.5)))
-        itemAdapter = ItemAdapter(requireContext(),items)
+        itemAdapter = ItemAdapter(requireContext(),sharedViewModel.partyItems.value!!,this,sharedViewModel,viewLifecycleOwner,db)
         rvItems.adapter = itemAdapter
         rvItems.layoutManager = LinearLayoutManager(requireContext(),LinearLayoutManager.VERTICAL,false)
     }
@@ -247,7 +163,7 @@ class PartyFragment : Fragment() {
     }
 
     private fun itemList() {
-        val dialog = Dialog(requireContext(),R.style.DialogStyle)
+        dialog = Dialog(requireContext(),R.style.DialogStyle)
         dialog.setContentView(R.layout.item_list_dialog_layout)
 
         dialog.window!!.setBackgroundDrawableResource(R.drawable.bg_dialog)
@@ -255,41 +171,67 @@ class PartyFragment : Fragment() {
         val rvItemList = dialog.findViewById<RecyclerView>(R.id.rvItemListDialog)
         val btnNewItem = dialog.findViewById<Button>(R.id.btnNewItemDialog)
 
-        getItems()
-        specificItems.observe(viewLifecycleOwner){
-            rvItemList.adapter = ItemListAdapterDialog(requireContext(), specificItems.value!!)
+        Repository.getItems(requireContext(),type,db,sharedViewModel)
+        sharedViewModel.items.observe(viewLifecycleOwner){
+            rvItemList.adapter = ItemListAdapterDialog(requireContext(), sharedViewModel.items.value!!,this)
             rvItemList.layoutManager = LinearLayoutManager(requireContext(),LinearLayoutManager.VERTICAL,false)
-            Log.d("xxx",specificItems.value.toString())
         }
-
-
+        btnNewItem.setOnClickListener {
+            createNewItem()
+        }
         dialog.show()
     }
 
-    private fun getItems() {
-        val list = mutableListOf<SpecificItem>()
-        db.collection("Item")
-            .whereEqualTo("type",type)
-            .get()
-            .addOnSuccessListener {
-                for (document in it){
-                    list.add(
-                        SpecificItem(
-                            document.data["item_name"].toString(),
-                            (document.data["item_id"] as Number).toInt(),
-                            document.data["item_photo"].toString()
-                    )
-                    )
+    private fun createNewItem() {
+        val createDialog = Dialog(requireContext(),R.style.DialogStyle)
+        createDialog.setContentView(R.layout.create_new_item_dialog_layout)
+        createDialog.window!!.setBackgroundDrawableResource(R.drawable.bg_dialog)
+        val etItemName = createDialog.findViewById<EditText>(R.id.etItemNameDialog)
+        ivPhoto = createDialog.findViewById<ImageView>(R.id.ivNewItemPhoto)
+        val btnCreate = createDialog.findViewById<Button>(R.id.btnCreateNewItem)
+        ivPhoto.setOnClickListener {
+            getPhoto.launch(0)
+        }
+        btnCreate.setOnClickListener {
+            if(etItemName.text.isNotEmpty()) {
+                itemName = etItemName.text.toString()
+                uploadImage()
+                createDialog.dismiss()
+                sharedViewModel.itemCreationIsReady.observe(viewLifecycleOwner){
+                    if(sharedViewModel.itemCreationIsReady.value!!) {
+                        itemList()
+                        sharedViewModel.itemCreationIsReady.value = false
+                    }
                 }
-                specificItems.value = list
-                Log.d("xxx",specificItems.value.toString())
+
             }
-            .addOnFailureListener {
-                Toast.makeText(requireContext(),"Something went wrong. Try again later!",Toast.LENGTH_SHORT).show()
-            }
+        }
+
+        createDialog.show()
+
     }
+    private fun uploadImage() {
+        if (itemPhotoUri != null) {
+            val path = storage.reference.child("itemPhotos").child(itemName+System.currentTimeMillis().toString())
+            path.putFile(itemPhotoUri!!).addOnSuccessListener {
+                Toast.makeText(requireContext(), "Photo uploaded", Toast.LENGTH_SHORT).show()
+                path.downloadUrl.addOnSuccessListener { uri ->
+                    Repository.saveItemDataToFirestore(uri,requireContext(),db,itemName,type,sharedViewModel)
+                }
+            }
+        }
+    }
+    private val getPhoto = registerForActivityResult(PickPhoto()) { selectedUri ->
+        if (selectedUri != null) {
+            Glide
+                .with(requireContext())
+                .load(selectedUri)
+                .circleCrop()
+                .into(ivPhoto)
+            itemPhotoUri = selectedUri
+            }
 
-
+        }
     private fun splitBills() {
         TODO("Not yet implemented")
     }
@@ -300,14 +242,74 @@ class PartyFragment : Fragment() {
             rvItems = view.findViewById(R.id.rvItems)
             rvMembers = view.findViewById(R.id.rvMembers)
             btnAddItem = view.findViewById(R.id.btnAddItem)
+            tvSum = view.findViewById(R.id.tvTotalAmount)
         }
     }
-    private fun ready(){
-        if( isReady == 2){
-            registerAdapters()
+
+
+    override fun onItemClick(position: Int) {
+        selectedItemByDialog = sharedViewModel.items.value!![position]
+        Log.d("xxx",selectedItemByDialog.toString())
+        dialog.dismiss()
+        val countAndPriceDialog = Dialog(requireContext(),R.style.DialogStyle)
+        countAndPriceDialog.setContentView(R.layout.price_and_count_dialog_layout)
+        countAndPriceDialog.window!!.setBackgroundDrawableResource(R.drawable.bg_dialog)
+        countAndPriceDialog.show()
+
+        val btnOk = countAndPriceDialog.findViewById<Button>(R.id.btnOkDialog)
+        val tvCount = countAndPriceDialog.findViewById<TextView>(R.id.tvCountDialog)
+        val tvPrice = countAndPriceDialog.findViewById<TextView>(R.id.tvPriceDialog)
+        btnOk.setOnClickListener {
+            countAndPriceDialog.dismiss()
+            selectedItemFinal = Item(selectedItemByDialog.item_name,selectedItemByDialog.item_id,selectedItemByDialog.item_photo,tvCount.text.toString().toInt(),tvPrice.text.toString().toDouble(),0)
+            Repository.addItemToFirebase(requireContext(),selectedItemFinal,db,
+                sharedViewModel.party.value!!,sharedViewModel)
         }
-        else{
-            isReady++
+        setCountAndPriceListeners(countAndPriceDialog)
+
+    }
+
+    private fun setCountAndPriceListeners(dialog: Dialog) {
+        val btnPlusPrice = dialog.findViewById<ImageButton>(R.id.btnPlusPrice)
+        val btnMinusPrice = dialog.findViewById<ImageButton>(R.id.btnMinusPrice)
+        val btnPlusCount = dialog.findViewById<ImageButton>(R.id.btnPlusCount)
+        val btnMinusCount = dialog.findViewById<ImageButton>(R.id.btnMinusCount)
+        val tvPrice = dialog.findViewById<TextView>(R.id.tvPriceDialog)
+        val tvCount = dialog.findViewById<TextView>(R.id.tvCountDialog)
+        if(tvPrice.text == "1"){
+            btnMinusPrice.isEnabled = false
         }
+        if(tvCount.text == "1"){
+            btnMinusCount.isEnabled = false
+        }
+        btnPlusPrice.setOnClickListener {
+            if(tvPrice.text == "1" || tvPrice.text.toString().toInt() == 1 ){
+                btnMinusPrice.isEnabled = true
+            }
+            tvPrice.text = (tvPrice.text.toString().toInt() + 1).toString()
+        }
+        btnMinusPrice.setOnClickListener {
+            if(tvPrice.text == "2" || tvPrice.text.toString().toInt() == 2){
+                btnMinusPrice.isEnabled = false
+            }
+            tvPrice.text = (tvPrice.text.toString().toInt() - 1).toString()
+        }
+        btnPlusCount.setOnClickListener {
+            if(tvCount.text == "1" || tvCount.text.toString().toInt() == 1 ){
+                btnMinusCount.isEnabled = true
+            }
+            tvCount.text = (tvCount.text.toString().toInt() + 1).toString()
+        }
+        btnMinusCount.setOnClickListener {
+            if(tvCount.text == "2" || tvCount.text.toString().toInt() == 2){
+                btnMinusCount.isEnabled = false
+            }
+            tvCount.text = (tvCount.text.toString().toInt() - 1).toString()
+        }
+    }
+
+    override fun onSubscribeClick(position: Int) {
+        Log.d("xxx","Subscribe"+sharedViewModel.partyItems.value!![position].toString())
+        Repository.subscribe(requireContext(),sharedViewModel,db,itemAdapter,position)
     }
 }

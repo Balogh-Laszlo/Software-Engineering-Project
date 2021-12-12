@@ -20,4 +20,11 @@
     <string name="choose_type">Choose Type</string>
     <string name="choose_an_existing_item_or_create_your_own">Choose an existing item or create your own</string>
     <string name="new_item">New Item</string>
+    <string name="price">Price</string>
+    <string name="count">Count</string>
+    <string name="ok">OK</string>
+    <string name="item_name">Item name</string>
+    <string name="create_a_new_item">Create a new item!</string>
+    <string name="add_a_photo_as_well">Add a photo as well</string>
+    <string name="create">Create</string>
 </resources>
