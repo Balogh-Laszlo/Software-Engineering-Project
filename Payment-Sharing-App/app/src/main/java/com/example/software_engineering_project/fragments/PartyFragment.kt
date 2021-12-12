@@ -26,7 +26,8 @@ import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.FirebaseStorage
 
 
-class PartyFragment : Fragment(), ItemListAdapterDialog.OnItemClickListener {
+class PartyFragment : Fragment(), ItemListAdapterDialog.OnItemClickListener,
+    ItemAdapter.OnSubscribeClickListener {
     private lateinit var btnSplitBills: Button
     private lateinit var rvMembers:RecyclerView
     private lateinit var rvItems:RecyclerView
@@ -98,7 +99,7 @@ class PartyFragment : Fragment(), ItemListAdapterDialog.OnItemClickListener {
 //            2,
 //            "https://firebasestorage.googleapis.com/v0/b/payment-sharing-app.appspot.com/o/itemPhotos%2Fpalinka.jpg?alt=media&token=8acaab97-d773-429d-93fc-3f811d318546",
 //            3,12.5)))
-        itemAdapter = ItemAdapter(requireContext(),sharedViewModel.partyItems.value!!)
+        itemAdapter = ItemAdapter(requireContext(),sharedViewModel.partyItems.value!!,this)
         rvItems.adapter = itemAdapter
         rvItems.layoutManager = LinearLayoutManager(requireContext(),LinearLayoutManager.VERTICAL,false)
     }
@@ -260,7 +261,7 @@ class PartyFragment : Fragment(), ItemListAdapterDialog.OnItemClickListener {
         val tvPrice = countAndPriceDialog.findViewById<TextView>(R.id.tvPriceDialog)
         btnOk.setOnClickListener {
             countAndPriceDialog.dismiss()
-            selectedItemFinal = Item(selectedItemByDialog.item_name,selectedItemByDialog.item_id,selectedItemByDialog.item_photo,tvCount.text.toString().toInt(),tvPrice.text.toString().toDouble())
+            selectedItemFinal = Item(selectedItemByDialog.item_name,selectedItemByDialog.item_id,selectedItemByDialog.item_photo,tvCount.text.toString().toInt(),tvPrice.text.toString().toDouble(),0)
             Repository.addItemToFirebase(requireContext(),selectedItemFinal,db,
                 sharedViewModel.party.value!!,sharedViewModel)
         }
@@ -305,5 +306,10 @@ class PartyFragment : Fragment(), ItemListAdapterDialog.OnItemClickListener {
             }
             tvCount.text = (tvCount.text.toString().toInt() - 1).toString()
         }
+    }
+
+    override fun onSubscribeClick(position: Int) {
+        Log.d("xxx","Subscribe"+sharedViewModel.partyItems.value!![position].toString())
+
     }
 }

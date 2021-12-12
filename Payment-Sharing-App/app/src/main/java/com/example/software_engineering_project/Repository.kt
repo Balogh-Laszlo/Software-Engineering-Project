@@ -113,7 +113,8 @@ object Repository {
                                 (it.documents!![0].data!!["item_id"] as Number).toInt(),
                                 it.documents!![0].data!!["item_photo"].toString(),
                                 party!!.item_count[i],
-                                party!!.item_price[i]
+                                party!!.item_price[i],
+                                i
                             )
                         )
                     }
