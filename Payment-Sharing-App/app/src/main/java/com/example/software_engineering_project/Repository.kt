@@ -311,4 +311,41 @@ object Repository {
             }
 
     }
+
+    fun checkIfEveryoneIsSubscribed(
+        context: Context,
+        sharedViewModel: SharedViewModel,
+        db: FirebaseFirestore
+    ) {
+        if(sharedViewModel.partyItems.value != null && sharedViewModel.selectedPartyID.value != null) {
+            sharedViewModel.partyItems.value!!.forEach {
+                db.collection("Subscribers")
+                    .whereEqualTo("party_id", sharedViewModel.selectedPartyID.value)
+                    .whereEqualTo("party_item_index", it.index)
+                    .get()
+                    .addOnSuccessListener { result ->
+                        if(result.documents.size == 0){
+                            sharedViewModel.isEveryoneSubscribed.value = false
+                            Log.d("xxx", "No one is subscribed for this item: $it")
+                        }
+                        else{
+                            var isSubscribedAnyone = false
+                            result.documents.forEach { doc->
+                                val members = doc["subscribed_members_index"] as List<String>
+                                if(members.isNotEmpty()){
+                                    isSubscribedAnyone = true
+                                }
+                            }
+                            if(!isSubscribedAnyone){
+                                sharedViewModel.isEveryoneSubscribed.value = false
+                                Log.d("xxx", "No one is subscribed for this item: $it")
+                            }
+                        }
+                    }
+                    .addOnFailureListener {
+                        Toast.makeText(context,"Something went wrong. Try again later!",Toast.LENGTH_SHORT).show()
+                    }
+            }
+        }
+    }
 }

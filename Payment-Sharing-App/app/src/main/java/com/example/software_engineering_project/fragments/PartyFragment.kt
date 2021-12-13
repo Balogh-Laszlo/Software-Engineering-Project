@@ -99,9 +99,19 @@ class PartyFragment : Fragment(), ItemListAdapterDialog.OnItemClickListener,
 //            2,
 //            "https://firebasestorage.googleapis.com/v0/b/payment-sharing-app.appspot.com/o/itemPhotos%2Fpalinka.jpg?alt=media&token=8acaab97-d773-429d-93fc-3f811d318546",
 //            3,12.5)))
-        itemAdapter = ItemAdapter(requireContext(),sharedViewModel.partyItems.value!!,this,sharedViewModel,viewLifecycleOwner,db)
-        rvItems.adapter = itemAdapter
-        rvItems.layoutManager = LinearLayoutManager(requireContext(),LinearLayoutManager.VERTICAL,false)
+        if(sharedViewModel.partyItems.value != null) {
+            itemAdapter = ItemAdapter(
+                requireContext(),
+                sharedViewModel.partyItems.value!!,
+                this,
+                sharedViewModel,
+                viewLifecycleOwner,
+                db
+            )
+            rvItems.adapter = itemAdapter
+            rvItems.layoutManager =
+                LinearLayoutManager(requireContext(), LinearLayoutManager.VERTICAL, false)
+        }
     }
 
     private fun registerListeners() {
@@ -233,7 +243,7 @@ class PartyFragment : Fragment(), ItemListAdapterDialog.OnItemClickListener,
 
         }
     private fun splitBills() {
-        TODO("Not yet implemented")
+        Repository.checkIfEveryoneIsSubscribed(requireContext(),sharedViewModel,db)
     }
 
     private fun initializeView(view: View?) {
