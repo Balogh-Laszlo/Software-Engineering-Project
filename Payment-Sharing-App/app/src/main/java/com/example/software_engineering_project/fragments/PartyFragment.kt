@@ -1,5 +1,6 @@
 package com.example.software_engineering_project.fragments
 
+import android.annotation.SuppressLint
 import android.app.Dialog
 import android.net.Uri
 import android.os.Bundle
@@ -10,6 +11,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.*
 import androidx.fragment.app.activityViewModels
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
@@ -70,12 +72,43 @@ class PartyFragment : Fragment(), ItemListAdapterDialog.OnItemClickListener,
         Repository.trackPartyData(requireContext(),db,sharedViewModel,viewLifecycleOwner)
         sharedViewModel.isReady.observe(viewLifecycleOwner){
             if (it){
+                if(sharedViewModel.party.value != null && !sharedViewModel.party.value!!.is_active){
+                    Repository.calculateMyPart(requireContext(),sharedViewModel,db)
+                    sharedViewModel.myPart.observe(viewLifecycleOwner){
+//                        showMyPartDialog()
+                        btnSplitBills.isEnabled = false
+
+                    }
+                }
                 registerAdapters()
                 tvSum.text = sharedViewModel.party.value!!.sum.toString()+" RON"
             }
         }
 
         return view
+    }
+
+    @SuppressLint("SetTextI18n")
+    private fun showMyPartDialog() {
+        val dialog2 = Dialog(requireContext(),R.style.DialogStyle)
+        dialog2.setContentView(R.layout.your_part_dialog_layout)
+        dialog2.window!!.setBackgroundDrawableResource(R.drawable.bg_dialog)
+        val tvYourPart = dialog2.findViewById<TextView>(R.id.tvYourPartDialog)
+        tvYourPart.text = "${sharedViewModel.myPart.value}RON"
+        dialog2.show()
+        val btnBack = dialog2.findViewById<Button>(R.id.btnBack)
+        btnBack.setOnClickListener {
+            Repository.disconnectListener(sharedViewModel)
+            dialog2.dismiss()
+            findNavController().navigate(R.id.partyListFragment)
+
+
+        }
+        val btnClose = dialog2.findViewById<ImageButton>(R.id.btnCloseDialog)
+        btnClose.setOnClickListener {
+            dialog2.dismiss()
+        }
+
     }
 
     private fun registerAdapters() {
@@ -244,6 +277,20 @@ class PartyFragment : Fragment(), ItemListAdapterDialog.OnItemClickListener,
         }
     private fun splitBills() {
         Repository.checkIfEveryoneIsSubscribed(requireContext(),sharedViewModel,db)
+        sharedViewModel.isEveryoneSubscribed.observe(viewLifecycleOwner){
+            if(sharedViewModel.isEveryoneSubscribed.value != null && sharedViewModel.isEveryoneSubscribed.value == true){
+                sharedViewModel.isEveryoneSubscribed.value = false
+                Repository.calculateMyPart(requireContext(),sharedViewModel,db)
+                sharedViewModel.myPart.observe(viewLifecycleOwner){
+                    if(sharedViewModel.myPart.value != null && sharedViewModel.myPart.value!! > 0.0){
+                        showMyPartDialog()
+                        Repository.setPartyInactive(requireContext(),sharedViewModel,db)
+                        btnSplitBills.isEnabled = false
+
+                    }
+                }
+            }
+        }
     }
 
     private fun initializeView(view: View?) {

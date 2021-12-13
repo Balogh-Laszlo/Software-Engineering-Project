@@ -27,4 +27,6 @@
     <string name="create_a_new_item">Create a new item!</string>
     <string name="add_a_photo_as_well">Add a photo as well</string>
     <string name="create">Create</string>
+    <string name="your_part">Your part:</string>
+    <string name="back">Back</string>
 </resources>

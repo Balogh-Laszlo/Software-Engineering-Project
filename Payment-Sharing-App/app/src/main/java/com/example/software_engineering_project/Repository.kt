@@ -10,14 +10,14 @@ import com.example.software_engineering_project.utils.Item
 import com.example.software_engineering_project.utils.Member
 import com.example.software_engineering_project.utils.Party
 import com.example.software_engineering_project.utils.SpecificItem
-import com.google.firebase.firestore.FieldValue
-import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.*
 import java.lang.Thread.sleep
 
 
 object Repository {
     private lateinit var party:Party
     private var isReady = 0
+    private lateinit var listener: ListenerRegistration
     private fun getMembersData(
         partyMembers: MutableList<String>,
         context: Context,
@@ -68,26 +68,28 @@ object Repository {
         viewLifecycleOwner: LifecycleOwner
     ) {
         sharedViewModel.selectedPartyID.observe(viewLifecycleOwner, {
-            db.collection("Party")
+             val listener1 =EventListener<QuerySnapshot>(){ value, error ->
+
+                Log.d("xxx", "Snapshot" + value!!.documents[0].data!!["password"].toString())
+                party = Party(
+                    value!!.documents[0].data!!["is_active"] as Boolean,
+                    (value!!.documents[0].data!!["party_id"] as Number).toInt(),
+                    value!!.documents[0].data!!["party_name"].toString(),
+                    value!!.documents[0].data!!["password"].toString(),
+                    (value!!.documents[0].data!!["sum"] as Number).toDouble(),
+                    value!!.documents[0].data!!["party_members"] as MutableList<String>,
+                    value!!.documents[0].data!!["party_items"] as MutableList<Int>,
+                    value!!.documents[0].data!!["item_count"] as MutableList<Int>,
+                    value!!.documents[0].data!!["item_price"] as MutableList<Double>
+                )
+                sharedViewModel.party.value = party
+                getMembersData(party.party_members,context,db,sharedViewModel)
+                getPartyItems(party.party_items,context,db, party,sharedViewModel)
+                ready(sharedViewModel)
+            }
+            listener = db.collection("Party")
                 .whereEqualTo("party_id", sharedViewModel.selectedPartyID.value)
-                .addSnapshotListener { value, error ->
-                    Log.d("xxx", "Snapshot" + value!!.documents[0].data!!["password"].toString())
-                    party = Party(
-                        value!!.documents[0].data!!["is_active"] as Boolean,
-                        (value!!.documents[0].data!!["party_id"] as Number).toInt(),
-                        value!!.documents[0].data!!["party_name"].toString(),
-                        value!!.documents[0].data!!["password"].toString(),
-                        (value!!.documents[0].data!!["sum"] as Number).toDouble(),
-                        value!!.documents[0].data!!["party_members"] as MutableList<String>,
-                        value!!.documents[0].data!!["party_items"] as MutableList<Int>,
-                        value!!.documents[0].data!!["item_count"] as MutableList<Int>,
-                        value!!.documents[0].data!!["item_price"] as MutableList<Double>
-                    )
-                    sharedViewModel.party.value = party
-                    getMembersData(party.party_members,context,db,sharedViewModel)
-                    getPartyItems(party.party_items,context,db, party,sharedViewModel)
-                    ready(sharedViewModel)
-                }
+                .addSnapshotListener(listener1)
         })
 
     }
@@ -186,7 +188,7 @@ object Repository {
         price.add(selectedItemFinal.item_price)
         val id = party.party_items
         id.add(selectedItemFinal.item_id)
-        val sum = party.sum + selectedItemFinal.item_price
+        val sum = party.sum + (selectedItemFinal.item_price*selectedItemFinal.item_count)
 
         db.collection("Party")
             .whereEqualTo("party_id",sharedViewModel.selectedPartyID.value)
@@ -347,5 +349,60 @@ object Repository {
                     }
             }
         }
+    }
+
+    fun calculateMyPart(context: Context, sharedViewModel: SharedViewModel, db: FirebaseFirestore) {
+        var myPart = 0.0
+        if (sharedViewModel.selectedPartyID.value != null) {
+            db.collection("Subscribers")
+                .whereEqualTo("party_id", sharedViewModel.selectedPartyID.value)
+                .get()
+                .addOnSuccessListener {
+                    it.documents.forEach { doc ->
+                        val memberList = doc.data!!["subscribed_members_index"] as List<String>
+                        if(memberList.contains(MyApplication.UID) && sharedViewModel.party.value != null){
+                            val index = (doc.data!!["party_item_index"] as Number).toInt()
+                            myPart += (sharedViewModel.party.value!!.item_price[index] * (sharedViewModel.party.value!!.item_count[index]).toDouble())/memberList.size
+                            Log.d("xxx", doc.data!!["party_item_index"].toString()+": "+myPart.toString())
+                            Log.d("xxx","$index price: "+sharedViewModel.party.value!!.item_price[index].toString())
+                            Log.d("xxx","$index count: "+(sharedViewModel.party.value!!.item_count[index]).toDouble().toString())
+                            Log.d("xxx","$index count*price: "+(sharedViewModel.party.value!!.item_price[index]*(sharedViewModel.party.value!!.item_count[index]).toDouble()).toString())
+
+                        }
+                    }
+                    sharedViewModel.myPart.value = myPart
+                }
+        }
+    }
+
+    fun setPartyInactive(
+        context: Context,
+        sharedViewModel: SharedViewModel,
+        db: FirebaseFirestore
+    ) {
+        if(sharedViewModel.selectedPartyID.value != null){
+            db.collection("Party")
+                .whereEqualTo("party_id", sharedViewModel.selectedPartyID.value)
+                .get()
+                .addOnSuccessListener { doc ->
+                    if(doc.documents.size>0){
+                        db.collection("Party").document(doc.documents[0].id)
+                            .update("is_active",false)
+                            .addOnSuccessListener {
+                                Log.d("xxx","party: ${doc.documents[0].data!!["party_name"].toString()} inactive")
+                            }
+                            .addOnFailureListener {
+                                Toast.makeText(context,"Something went wrong. Try again later!",Toast.LENGTH_SHORT).show()
+                            }
+                    }
+                }
+                .addOnFailureListener {
+                    Toast.makeText(context,"Something went wrong. Try again later!",Toast.LENGTH_SHORT).show()
+                }
+        }
+    }
+    fun disconnectListener(sharedViewModel: SharedViewModel) {
+        listener.remove()
+        sharedViewModel.isReady.value = false
     }
 }
