@@ -24,7 +24,6 @@ class PartyListAdapter(private val context: Context,
         val ivOwnerPicture: ImageView = itemView.findViewById(R.id.partyList_ivOwnerPicture)
         val tvPartyName: TextView = itemView.findViewById(R.id.partyList_tvPartyName)
         val tvTotal: TextView = itemView.findViewById(R.id.partyList_tvTotal)
-        val btnDelete: ImageButton = itemView.findViewById(R.id.partyList_btnDelete)
 
         init {
             itemView.setOnClickListener(this)
