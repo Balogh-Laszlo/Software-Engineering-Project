@@ -12,6 +12,7 @@ import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.example.software_engineering_project.MyApplication
 import com.example.software_engineering_project.R
 import com.example.software_engineering_project.SharedViewModel
 import com.example.software_engineering_project.adapters.PartyListAdapter
@@ -83,7 +84,9 @@ class PartyListFragment : Fragment(), PartyListAdapter.OnItemClickListener {
                         document.data["item_count"] as MutableList<Int>,
                         document.data["item_price"] as MutableList<Double>
                     )
-                    parties.value!!.add(party)
+                    if (party.party_members.contains(MyApplication.UID)) {
+                        parties.value!!.add(party)
+                    }
                 }
                 adapter.setData(parties.value as ArrayList<Party>)
                 adapter.notifyDataSetChanged()
