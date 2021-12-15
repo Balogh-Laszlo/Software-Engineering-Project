@@ -19,7 +19,7 @@ class SharedViewModel:ViewModel() {
     val joinWasSuccessful = MutableLiveData<Boolean>(false)
     val newPartyId = MutableLiveData<Int>(-1)
     val partyCreationWasSuccessful = MutableLiveData<Boolean>(false)
-    val isEveryoneSubscribed = MutableLiveData(false)
+    val isEveryoneSubscribed = MutableLiveData(true)
     val myPart = MutableLiveData(0.0)
     val dialog = MutableLiveData(false)
     val isEveryoneSubscribedControl = MutableLiveData(false)
