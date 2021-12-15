@@ -111,11 +111,6 @@ class PartyFragment : Fragment(), ItemListAdapterDialog.OnItemClickListener,
     }
 
     private fun registerAdapters() {
-//        memberAdapter = MemberAdapter(listOf(User("laco.balogh@yahoo.com",
-//            "93wKhX3iB3cLKvP7D1do6K0JnYx1",
-//        "Laci",
-//        "https://firebasestorage.googleapis.com/v0/b/payment-sharing-app.appspot.com/o/userPhotos%2Flaco.balogh%40yahoo.com?alt=media&token=0a05eb48-7235-4c23-8e3e-da42908cb6dd")
-//        ),requireContext())
         if(sharedViewModel.partyMembers.value != null) {
             memberAdapter = MemberAdapter(sharedViewModel.partyMembers.value!!, requireContext())
             rvMembers.adapter = memberAdapter
@@ -123,14 +118,6 @@ class PartyFragment : Fragment(), ItemListAdapterDialog.OnItemClickListener,
                 LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false)
         }
 
-//        itemAdapter = ItemAdapter(requireContext(), listOf(Item("Beer",
-//            1,
-//            "https://firebasestorage.googleapis.com/v0/b/payment-sharing-app.appspot.com/o/itemPhotos%2Fbeer.jpg?alt=media&token=a9887272-6666-422f-93d6-99945532b214",
-//            2,4.5),
-//            Item("Pálinka",
-//            2,
-//            "https://firebasestorage.googleapis.com/v0/b/payment-sharing-app.appspot.com/o/itemPhotos%2Fpalinka.jpg?alt=media&token=8acaab97-d773-429d-93fc-3f811d318546",
-//            3,12.5)))
         if(sharedViewModel.partyItems.value != null) {
             itemAdapter = ItemAdapter(
                 requireContext(),
@@ -367,5 +354,16 @@ class PartyFragment : Fragment(), ItemListAdapterDialog.OnItemClickListener,
     override fun onSubscribeClick(position: Int) {
         Log.d("xxx","Subscribe"+sharedViewModel.partyItems.value!![position].toString())
         Repository.subscribe(requireContext(),sharedViewModel,db,itemAdapter,position)
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        sharedViewModel.selectedPartyID.value = 0
+        sharedViewModel.isReady.value = false
+        sharedViewModel.myPart.value = null
+        sharedViewModel.party.value = null
+        sharedViewModel.partyItems.value = mutableListOf()
+        sharedViewModel.partyMembers.value = mutableListOf()
+        sharedViewModel.items.value = mutableListOf()
     }
 }
