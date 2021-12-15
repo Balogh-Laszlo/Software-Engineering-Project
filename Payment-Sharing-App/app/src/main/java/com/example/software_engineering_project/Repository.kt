@@ -402,6 +402,7 @@ object Repository {
         db: FirebaseFirestore
     ) {
         if(sharedViewModel.partyItems.value != null && sharedViewModel.selectedPartyID.value != null) {
+            var i =0
             sharedViewModel.partyItems.value!!.forEach {
                 db.collection("Subscribers")
                     .whereEqualTo("party_id", sharedViewModel.selectedPartyID.value)
@@ -425,6 +426,8 @@ object Repository {
                                 Log.d("xxx", "No one is subscribed for this item: $it")
                             }
                         }
+                        i++
+                        isOK(sharedViewModel.partyItems.value!!.size, i,sharedViewModel)
                     }
                     .addOnFailureListener {
                         Toast.makeText(context,"Something went wrong. Try again later!",Toast.LENGTH_SHORT).show()
@@ -432,6 +435,13 @@ object Repository {
             }
         }
     }
+
+    private fun isOK(size: Int, i: Int, sharedViewModel: SharedViewModel) {
+        if(i == size){
+            sharedViewModel.isEveryoneSubscribedControl.value = true
+        }
+    }
+
 
     fun calculateMyPart(context: Context, sharedViewModel: SharedViewModel, db: FirebaseFirestore) {
         var myPart = 0.0

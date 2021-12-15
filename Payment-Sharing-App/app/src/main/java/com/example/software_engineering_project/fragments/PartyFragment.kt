@@ -269,18 +269,22 @@ class PartyFragment : Fragment(), ItemListAdapterDialog.OnItemClickListener,
         }
     private fun splitBills() {
         Repository.checkIfEveryoneIsSubscribed(requireContext(),sharedViewModel,db)
-        sharedViewModel.isEveryoneSubscribed.observe(viewLifecycleOwner){
-            if(sharedViewModel.isEveryoneSubscribed.value != null && sharedViewModel.isEveryoneSubscribed.value == true){
+        sharedViewModel.isEveryoneSubscribedControl.observe(viewLifecycleOwner){
+            if(sharedViewModel.isEveryoneSubscribedControl.value == true && sharedViewModel.isEveryoneSubscribed.value != null && sharedViewModel.isEveryoneSubscribed.value == true){
                 sharedViewModel.isEveryoneSubscribed.value = false
-                Repository.calculateMyPart(requireContext(),sharedViewModel,db)
-                sharedViewModel.myPart.observe(viewLifecycleOwner){
-                    if(sharedViewModel.myPart.value != null && sharedViewModel.myPart.value!! > 0.0){
-                        showMyPartDialog()
-                        Repository.setPartyInactive(requireContext(),sharedViewModel,db)
-                        btnSplitBills.isEnabled = false
-
-                    }
-                }
+                Repository.setPartyInactive(requireContext(),sharedViewModel,db)
+//                Repository.calculateMyPart(requireContext(),sharedViewModel,db)
+//                sharedViewModel.myPart.observe(viewLifecycleOwner){
+//                    if(sharedViewModel.myPart.value != null && sharedViewModel.myPart.value!! > 0.0){
+////                        showMyPartDialog()
+//
+//                        btnSplitBills.isEnabled = false
+//
+//                    }
+//                }
+            }
+            else{
+                Toast.makeText(requireContext(),"Every item has to have at least one subscriber!",Toast.LENGTH_SHORT).show()
             }
         }
     }
