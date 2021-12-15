@@ -38,6 +38,7 @@ class PartyFragment : Fragment(), ItemListAdapterDialog.OnItemClickListener,
     private lateinit var btnAddItem: ImageButton
     private lateinit var tvSum: TextView
     private lateinit var ivPhoto: ImageView
+    private lateinit var tvPassword:TextView
 
     private var itemPhotoUri: Uri? = null
 
@@ -81,6 +82,7 @@ class PartyFragment : Fragment(), ItemListAdapterDialog.OnItemClickListener,
                 }
                 registerAdapters()
                 tvSum.text = sharedViewModel.party.value!!.sum.toString()+" RON"
+                tvPassword.text = sharedViewModel.party.value!!.password
             }
         }
 
@@ -286,6 +288,8 @@ class PartyFragment : Fragment(), ItemListAdapterDialog.OnItemClickListener,
             rvMembers = view.findViewById(R.id.rvMembers)
             btnAddItem = view.findViewById(R.id.btnAddItem)
             tvSum = view.findViewById(R.id.tvTotalAmount)
+            tvPassword = view.findViewById(R.id.tvPasswordPartyLobby)
+
         }
     }
 
