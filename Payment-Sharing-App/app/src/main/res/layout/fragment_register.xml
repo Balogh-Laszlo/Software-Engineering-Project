@@ -5,6 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/background"
+    android:isScrollContainer="true"
     tools:context=".fragments.RegisterFragment">
 
     <TextView
@@ -93,8 +94,8 @@
         android:layout_marginTop="4dp"
         android:background="@drawable/edit_text_border"
         android:hint="@string/password_et"
-        android:padding="4dp"
         android:inputType="textPassword"
+        android:padding="4dp"
         android:textAlignment="center"
         android:textSize="20sp"
         app:layout_constraintEnd_toEndOf="parent"

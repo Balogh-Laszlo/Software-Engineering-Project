@@ -14,6 +14,7 @@ import android.widget.Toast
 import androidx.navigation.fragment.findNavController
 import com.bumptech.glide.Glide
 import com.example.software_engineering_project.MainActivity
+import com.example.software_engineering_project.MyApplication
 import com.example.software_engineering_project.R
 import com.google.firebase.auth.FirebaseAuth
 
@@ -58,6 +59,7 @@ class LoginFragment : Fragment() {
             btnLogin.isEnabled = false
             mAuth.signInWithEmailAndPassword(etEmailAddress.text.toString(),etPassword.text.toString()).addOnCompleteListener {
                 if (it.isSuccessful){
+                    MyApplication.UID = mAuth.uid.toString()
                     val intent = Intent(requireContext(),MainActivity::class.java)
                     startActivity(intent)
                 }

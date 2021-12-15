@@ -14,6 +14,7 @@ import androidx.core.content.ContextCompat
 import androidx.navigation.fragment.findNavController
 import com.bumptech.glide.Glide
 import com.example.software_engineering_project.LoginActivity
+import com.example.software_engineering_project.MyApplication
 import com.example.software_engineering_project.R
 import com.example.software_engineering_project.activityResult.PickPhoto
 import com.google.firebase.auth.FirebaseAuth
@@ -106,13 +107,11 @@ class RegisterFragment : Fragment() {
             showError("The password and the password confirmation does not match!")
         }
         else{
-//            mLoadingBar.setTitle("Registration")
-//            mLoadingBar.setMessage("Please wait")
-//            mLoadingBar.setCanceledOnTouchOutside(false)
-//            mLoadingBar.show()
+
             btnRegister.isEnabled = false
             mAuth.createUserWithEmailAndPassword(emailAddress,password).addOnCompleteListener { result ->
                 if(result.isSuccessful) {
+                    MyApplication.UID = mAuth.uid.toString()
                     findNavController().navigate(R.id.action_registerFragment_to_registrationSuccessfulFragment)
                     mAuth.currentUser?.let {
                         it.sendEmailVerification().addOnCompleteListener { task ->
