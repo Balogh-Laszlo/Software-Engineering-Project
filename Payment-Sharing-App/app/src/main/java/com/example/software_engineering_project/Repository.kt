@@ -453,6 +453,7 @@ object Repository {
                         }
                     }
                     sharedViewModel.myPart.value = myPart
+                    sharedViewModel.dialog.value = true
                 }
         }
     }

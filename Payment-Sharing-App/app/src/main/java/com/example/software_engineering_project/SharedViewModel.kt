@@ -21,4 +21,5 @@ class SharedViewModel:ViewModel() {
     val partyCreationWasSuccessful = MutableLiveData<Boolean>(false)
     val isEveryoneSubscribed = MutableLiveData(true)
     val myPart = MutableLiveData(0.0)
+    val dialog = MutableLiveData(false)
 }

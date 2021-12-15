@@ -74,10 +74,12 @@ class PartyFragment : Fragment(), ItemListAdapterDialog.OnItemClickListener,
             if (it){
                 if(sharedViewModel.party.value != null && !sharedViewModel.party.value!!.is_active){
                     Repository.calculateMyPart(requireContext(),sharedViewModel,db)
-                    sharedViewModel.myPart.observe(viewLifecycleOwner){
-                        showMyPartDialog()
-                        btnSplitBills.isEnabled = false
-                        btnAddItem.isEnabled = false
+                    sharedViewModel.dialog.observe(viewLifecycleOwner){
+                        if(sharedViewModel.dialog.value!!) {
+                            showMyPartDialog()
+                            btnSplitBills.isEnabled = false
+                            btnAddItem.isEnabled = false
+                        }
 
                     }
                 }
@@ -92,6 +94,7 @@ class PartyFragment : Fragment(), ItemListAdapterDialog.OnItemClickListener,
 
     @SuppressLint("SetTextI18n")
     private fun showMyPartDialog() {
+        sharedViewModel.dialog.value =false
         val dialog2 = Dialog(requireContext(),R.style.DialogStyle)
         dialog2.setContentView(R.layout.your_part_dialog_layout)
         dialog2.window!!.setBackgroundDrawableResource(R.drawable.bg_dialog)
