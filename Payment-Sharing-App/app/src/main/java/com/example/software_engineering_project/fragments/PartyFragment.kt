@@ -75,8 +75,9 @@ class PartyFragment : Fragment(), ItemListAdapterDialog.OnItemClickListener,
                 if(sharedViewModel.party.value != null && !sharedViewModel.party.value!!.is_active){
                     Repository.calculateMyPart(requireContext(),sharedViewModel,db)
                     sharedViewModel.myPart.observe(viewLifecycleOwner){
-//                        showMyPartDialog()
+                        showMyPartDialog()
                         btnSplitBills.isEnabled = false
+                        btnAddItem.isEnabled = false
 
                     }
                 }
